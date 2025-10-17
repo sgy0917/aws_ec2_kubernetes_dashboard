@@ -1,69 +1,56 @@
 #!/bin/bash
-cd /var/www/security_dashboard/mysite
-source /var/www/security_dashboard/venv/bin/activate
 
-echo "=========================================="
-echo "JSON 데이터 임포트 시작"
+echo "🔧 Django 마이그레이션 문제 해결 스크립트"
 echo "=========================================="
 
-# 1. JSON 파일 목록 확인
-echo ""
-echo "발견된 JSON 파일:"
-ls -1 *.json 2>/dev/null || echo "JSON 파일이 없습니다!"
+# Step 1: 기존 마이그레이션 파일 백업
+echo "📦 Step 1: 마이그레이션 파일 백업 중..."
+if [ -d "dashboard/migrations" ]; then
+    cp -r dashboard/migrations dashboard/migrations_backup_$(date +%Y%m%d_%H%M%S)
+    echo "✅ 백업 완료"
+fi
 
-# 2. 임포트 실행
-echo ""
-echo "=========================================="
-echo "데이터 임포트 중..."
-echo "=========================================="
-python manage.py import_security_data . --clear
+# Step 2: 기존 마이그레이션 파일 삭제
+echo "🗑️  Step 2: 기존 마이그레이션 파일 삭제 중..."
+rm -rf dashboard/migrations/0*.py
+rm -rf dashboard/migrations/__pycache__
+echo "✅ 삭제 완료"
 
-# 3. 결과 확인
-echo ""
-echo "=========================================="
-echo "임포트 결과 확인"
-echo "=========================================="
-python manage.py shell << 'PYEOF'
-from dashboard.models import Asset, SecurityCheck
+# Step 3: __init__.py 확인
+echo "📝 Step 3: __init__.py 확인 중..."
+if [ ! -f "dashboard/migrations/__init__.py" ]; then
+    touch dashboard/migrations/__init__.py
+    echo "✅ __init__.py 생성 완료"
+else
+    echo "✅ __init__.py 존재함"
+fi
 
-asset_count = Asset.objects.count()
-check_count = SecurityCheck.objects.count()
+# Step 4: 마이그레이션 생성
+echo "🔨 Step 4: 새로운 마이그레이션 생성 중..."
+python manage.py makemigrations dashboard
+if [ $? -eq 0 ]; then
+    echo "✅ 마이그레이션 생성 완료"
+else
+    echo "❌ 마이그레이션 생성 실패"
+    exit 1
+fi
 
-print(f"\n✅ 총 자산: {asset_count}개")
-print(f"✅ 총 점검: {check_count}개\n")
+# Step 5: 마이그레이션 적용 (fake-initial 옵션)
+echo "⚙️  Step 5: 마이그레이션 적용 중..."
+python manage.py migrate dashboard --fake-initial
+if [ $? -eq 0 ]; then
+    echo "✅ 마이그레이션 적용 완료"
+else
+    echo "⚠️  fake-initial 실패, 일반 migrate 시도 중..."
+    python manage.py migrate dashboard
+fi
 
-if asset_count > 0:
-    print("자산 목록:")
-    for asset in Asset.objects.all()[:5]:
-        print(f"  - {asset.name} ({asset.asset_code}) - {asset.latest_security_status}")
-    
-    if asset_count > 5:
-        print(f"  ... 외 {asset_count - 5}개")
-
-exit()
-PYEOF
-
-# 4. Static 파일 수집
-echo ""
-echo "=========================================="
-echo "Static 파일 수집 중..."
-echo "=========================================="
-python manage.py collectstatic --noinput
-
-# 5. Gunicorn 재시작
-echo ""
-echo "=========================================="
-echo "Gunicorn 재시작 중..."
-echo "=========================================="
-sudo systemctl restart gunicorn
-sleep 2
-sudo systemctl status gunicorn --no-pager
+# Step 6: 마이그레이션 상태 확인
+echo "📊 Step 6: 마이그레이션 상태 확인 중..."
+python manage.py showmigrations dashboard
 
 echo ""
+echo "✅ 마이그레이션 문제 해결 완료!"
 echo "=========================================="
-echo "🎉 완료!"
-echo "=========================================="
-echo ""
-echo "브라우저에서 확인하세요:"
-echo "http://$(curl -s ifconfig.me)/"
-echo ""
+echo "다음 명령어로 서버를 시작하세요:"
+echo "python manage.py runserver"
