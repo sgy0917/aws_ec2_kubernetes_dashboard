@@ -16,8 +16,8 @@ def dashboard(request):
     filter_date = request.GET.get('date', '')
     filter_round = request.GET.get('round', '')
 
-    # 전부 내림차순: 날짜 DESC, 시간 DESC
-    rounds_query = CheckRound.objects.all().order_by('-check_date', '-check_time')
+    # 전부 내림차순: 날짜 DESC, 시간 DESC, 회차번호 DESC
+    rounds_query = CheckRound.objects.all().order_by('-check_date', '-check_time', '-round_number')
 
     # 날짜 필터링
     if filter_date:
@@ -27,65 +27,39 @@ def dashboard(request):
         except ValueError:
             pass
 
-    # 날짜별로 그룹화
-    rounds_by_date = defaultdict(list)
-
-    for round_obj in rounds_query:
-        rounds_by_date[round_obj.check_date].append(round_obj)
-
-    # 날짜 내림차순으로 리스트 생성
-    rounds_list = []
-    all_dynamic_rounds = set()  # 동적 회차 번호 수집
-    
-    for date in sorted(rounds_by_date.keys(), reverse=True):
-        # 해당 날짜의 회차들을 시간 역순으로 정렬 (늦은 시간이 먼저)
-        date_rounds = sorted(rounds_by_date[date], key=lambda x: x.check_time, reverse=True)
-        
-        # 동적으로 회차 번호 할당 (늦은 시간 = 큰 번호)
-        round_count = len(date_rounds)
-        rounds_data = []
-        
-        for idx, round_obj in enumerate(date_rounds):
-            # 늦은 시간부터 큰 번호 할당
-            dynamic_round_number = round_count - idx
-            all_dynamic_rounds.add(dynamic_round_number)  # 회차 번호 수집
-            
-            round_data = {
-                'id': round_obj.id,
-                'round_number': dynamic_round_number,  # 동적 회차 번호
-                'check_time': round_obj.check_time.strftime('%H:%M:%S'),
-                'datetime_str': round_obj.get_datetime_str(),
-                'total_assets': round_obj.get_total_assets(),
-                'stats': round_obj.get_statistics(),
-            }
-            rounds_data.append(round_data)
-        
-        rounds_list.append({
-            'date': date,
-            'rounds': rounds_data
-        })
-
-    # 회차 필터링 적용 (동적 회차 번호 기준)
+    # 회차 필터링
     if filter_round:
         try:
             filter_round_num = int(filter_round)
-            # 선택한 회차만 필터링
-            filtered_rounds_list = []
-            for date_group in rounds_list:
-                filtered_rounds = [r for r in date_group['rounds'] if r['round_number'] == filter_round_num]
-                if filtered_rounds:
-                    filtered_rounds_list.append({
-                        'date': date_group['date'],
-                        'rounds': filtered_rounds
-                    })
-            rounds_list = filtered_rounds_list
+            rounds_query = rounds_query.filter(round_number=filter_round_num)
         except ValueError:
             pass
 
+    # 날짜별로 그룹화 (이미 정렬되어 있음)
+    rounds_by_date = defaultdict(list)
+
+    for round_obj in rounds_query:
+        round_data = {
+            'id': round_obj.id,
+            'round_number': round_obj.round_number,
+            'check_time': round_obj.check_time.strftime('%H:%M:%S'),
+            'datetime_str': round_obj.get_datetime_str(),
+            'total_assets': round_obj.get_total_assets(),
+            'stats': round_obj.get_statistics(),
+        }
+        rounds_by_date[round_obj.check_date].append(round_data)
+
+    # 날짜 내림차순으로 리스트 생성
+    rounds_list = []
+    for date in sorted(rounds_by_date.keys(), reverse=True):
+        rounds_list.append({
+            'date': date,
+            'rounds': rounds_by_date[date]  # 이미 내림차순 정렬됨
+        })
+
     # 필터 옵션
     all_dates = CheckRound.objects.values_list('check_date', flat=True).distinct().order_by('-check_date')
-    # 동적 회차 번호 목록 (내림차순)
-    all_rounds = sorted(all_dynamic_rounds, reverse=True)
+    all_rounds = CheckRound.objects.values_list('round_number', flat=True).distinct().order_by('-round_number')
 
     context = {
         'rounds_list': rounds_list,

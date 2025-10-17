@@ -1,9 +1,46 @@
 from django.contrib import admin
-from dashboard.models import Asset, SecurityCheck
+from dashboard.models import Asset, SecurityCheck, CheckRound
+
+
+@admin.register(CheckRound)
+class CheckRoundAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'check_date',
+        'round_number',
+        'check_time',
+        'get_total_assets',
+        'created_at',
+    ]
+    list_filter = [
+        'check_date',
+        'round_number',
+    ]
+    search_fields = [
+        'check_date',
+    ]
+    ordering = ['-check_date', '-round_number']
+    readonly_fields = ['created_at']
+    
+    fieldsets = (
+        ('회차 정보', {
+            'fields': ('check_date', 'round_number', 'check_time')
+        }),
+        ('메타 정보', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_total_assets(self, obj):
+        return obj.get_total_assets()
+    get_total_assets.short_description = '자산 수'
+
 
 @admin.register(Asset)
 class AssetAdmin(admin.ModelAdmin):
     list_display = [
+        'id',
         'asset_code',
         'name',
         'hostname',
@@ -53,6 +90,7 @@ class AssetAdmin(admin.ModelAdmin):
 class SecurityCheckAdmin(admin.ModelAdmin):
     list_display = [
         'id',
+        'round',
         'asset',
         'check_date',
         'status',
@@ -65,6 +103,7 @@ class SecurityCheckAdmin(admin.ModelAdmin):
     list_filter = [
         'status',
         'check_date',
+        'round__check_date',
     ]
     search_fields = [
         'asset__name',
@@ -75,8 +114,8 @@ class SecurityCheckAdmin(admin.ModelAdmin):
     readonly_fields = ['created_at', 'generated_at']
     
     fieldsets = (
-        ('자산 정보', {
-            'fields': ('asset',)
+        ('회차 및 자산', {
+            'fields': ('round', 'asset')
         }),
         ('점검 정보', {
             'fields': ('check_date', 'generated_at', 'status')
