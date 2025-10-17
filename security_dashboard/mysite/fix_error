@@ -1,0 +1,69 @@
+#!/bin/bash
+cd /var/www/security_dashboard/mysite
+source /var/www/security_dashboard/venv/bin/activate
+
+echo "=========================================="
+echo "JSON 데이터 임포트 시작"
+echo "=========================================="
+
+# 1. JSON 파일 목록 확인
+echo ""
+echo "발견된 JSON 파일:"
+ls -1 *.json 2>/dev/null || echo "JSON 파일이 없습니다!"
+
+# 2. 임포트 실행
+echo ""
+echo "=========================================="
+echo "데이터 임포트 중..."
+echo "=========================================="
+python manage.py import_security_data . --clear
+
+# 3. 결과 확인
+echo ""
+echo "=========================================="
+echo "임포트 결과 확인"
+echo "=========================================="
+python manage.py shell << 'PYEOF'
+from dashboard.models import Asset, SecurityCheck
+
+asset_count = Asset.objects.count()
+check_count = SecurityCheck.objects.count()
+
+print(f"\n✅ 총 자산: {asset_count}개")
+print(f"✅ 총 점검: {check_count}개\n")
+
+if asset_count > 0:
+    print("자산 목록:")
+    for asset in Asset.objects.all()[:5]:
+        print(f"  - {asset.name} ({asset.asset_code}) - {asset.latest_security_status}")
+    
+    if asset_count > 5:
+        print(f"  ... 외 {asset_count - 5}개")
+
+exit()
+PYEOF
+
+# 4. Static 파일 수집
+echo ""
+echo "=========================================="
+echo "Static 파일 수집 중..."
+echo "=========================================="
+python manage.py collectstatic --noinput
+
+# 5. Gunicorn 재시작
+echo ""
+echo "=========================================="
+echo "Gunicorn 재시작 중..."
+echo "=========================================="
+sudo systemctl restart gunicorn
+sleep 2
+sudo systemctl status gunicorn --no-pager
+
+echo ""
+echo "=========================================="
+echo "🎉 완료!"
+echo "=========================================="
+echo ""
+echo "브라우저에서 확인하세요:"
+echo "http://$(curl -s ifconfig.me)/"
+echo ""

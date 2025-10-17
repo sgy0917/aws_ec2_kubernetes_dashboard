@@ -1,0 +1,22 @@
+# 환경 변수 파일 (중요!)
+.env
+*.env
+.env.local
+.env.*.local
+
+# Gunicorn 소켓 파일
+*.sock
+gunicorn.sock
+
+# Python 캐시
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Django
+db.sqlite3
+db.sqlite3-journal
+/static/
+/staticfiles/
+/media/

@@ -1,0 +1,166 @@
+rom datetime import datetime, timedelta
+from dashboard.models import Asset, SecurityCheck
+import json
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
+
+def dashboard(request):
+    """메인 대시보드"""
+    # ... 기존 코드 유지 ...
+    pass
+
+def asset_detail(request, asset_id):
+    """자산 상세 페이지"""
+    # ... 기존 코드 유지 ...
+    pass
+
+def export_asset_excel(request, asset_id):
+    """자산 점검 결과 Excel 다운로드"""
+    
+    # 자산 정보 가져오기
+    asset = get_object_or_404(Asset, id=asset_id)
+    
+    # 최근 점검 결과 가져오기
+    latest_check = SecurityCheck.objects.filter(asset=asset).order_by('-check_date').first()
+    
+    if not latest_check:
+        return HttpResponse("점검 데이터가 없습니다.", status=404)
+    
+    # Excel 워크북 생성
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "점검 결과"
+    
+    # 스타일 정의
+    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True, size=12)
+    
+    pass_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
+    fail_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
+    warn_fill = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
+    na_fill = PatternFill(start_color="E7E6E6", end_color="E7E6E6", fill_type="solid")
+    
+    border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    
+    # 제목 작성
+    ws.merge_cells('A1:H1')
+    title_cell = ws['A1']
+    title_cell.value = f"보안 점검 결과 리포트 - {asset.name}"
+    title_cell.font = Font(size=16, bold=True)
+    title_cell.alignment = Alignment(horizontal='center', vertical='center')
+    
+    # 자산 정보 섹션
+    ws['A3'] = "자산 정보"
+    ws['A3'].font = Font(bold=True, size=14)
+    
+    info_data = [
+        ["자산 코드", asset.asset_code],
+        ["자산명", asset.name],
+        ["호스트네임", asset.hostname or "N/A"],
+        ["배포판", asset.distro or "Unknown"],
+        ["OS 버전", asset.os_version or "Unknown"],
+        ["커널 버전", asset.kernel or "N/A"],
+        ["실행 방식", asset.execution_type or "N/A"],
+        ["점검 일시", latest_check.check_date.strftime("%Y-%m-%d %H:%M:%S")],
+    ]
+    
+    row = 4
+    for label, value in info_data:
+        ws[f'A{row}'] = label
+        ws[f'A{row}'].font = Font(bold=True)
+        ws[f'B{row}'] = value
+        row += 1
+    
+    # 통계 섹션
+    row += 1
+    ws[f'A{row}'] = "점검 통계"
+    ws[f'A{row}'].font = Font(bold=True, size=14)
+    
+    row += 1
+    stats_data = [
+        ["총 점검 수", latest_check.total_checks],
+        ["양호", latest_check.passed_checks],
+        ["주의", latest_check.warning_checks],
+        ["취약", latest_check.failed_checks],
+        ["해당없음", latest_check.not_applicable_checks],
+        ["합격률", f"{latest_check.get_pass_rate()}%"],
+    ]
+    
+    for label, value in stats_data:
+        ws[f'A{row}'] = label
+        ws[f'A{row}'].font = Font(bold=True)
+        ws[f'B{row}'] = value
+        row += 1
+    
+    # 상세 점검 결과 섹션
+    row += 2
+    ws[f'A{row}'] = "상세 점검 결과"
+    ws[f'A{row}'].font = Font(bold=True, size=14)
+    
+    row += 1
+    headers = ["번호", "점검ID", "점검명", "상태", "점검내용", "점검경로", "실행명령어", "권장사항"]
+    
+    for col, header in enumerate(headers, 1):
+        cell = ws.cell(row=row, column=col)
+        cell.value = header
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+        cell.border = border
+    
+    # 컬럼 너비 설정
+    ws.column_dimensions['A'].width = 8
+    ws.column_dimensions['B'].width = 12
+    ws.column_dimensions['C'].width = 30
+    ws.column_dimensions['D'].width = 12
+    ws.column_dimensions['E'].width = 40
+    ws.column_dimensions['F'].width = 30
+    ws.column_dimensions['G'].width = 30
+    ws.column_dimensions['H'].width = 40
+    
+    # 상세 점검 데이터 작성
+    if latest_check.details:
+        for idx, check in enumerate(latest_check.details, 1):
+            row += 1
+            
+            status = check.get('status', '')
+            status_kr = status
+            
+            # 상태에 따른 배경색 설정
+            if status in ['양호', 'pass']:
+                status_kr = '양호'
+                fill = pass_fill
+            elif status in ['취약', 'fail']:
+                status_kr = '취약'
+                fill = fail_fill
+            elif status in ['주의', 'warn']:
+                status_kr = '주의'
+                fill = warn_fill
+            else:
+                status_kr = '해당없음'
+                fill = na_fill
+            
+            data_row = [
+                idx,
+                check.get('id', ''),
+                check.get('name', ''),
+                status_kr,
+                check.get('details', ''),
+                check.get('checked_paths', ''),
+                check.get('commands_executed', ''),
+                check.get('recommendation', '')
+            ]
+            
+            for col, value in enumerate(data_row, 1):
+                cell = ws.cell(row=row, column=col)
+                cell.value = value
+                cell.border = border
+                cell.alignment = Alignment(vertical='top', wrap_text=True)
+                
+              
