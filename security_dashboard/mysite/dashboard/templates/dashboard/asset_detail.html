@@ -4,6 +4,19 @@
 
 {% block extra_css %}
 <style>
+    /* 컨텐츠 영역 제한 */
+    body {
+        background: #f5f5f5;
+    }
+    
+    .container-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        background: white;
+        min-height: 100vh;
+    }
+
     .detail-header {
         background: linear-gradient(135deg, #7c4dff 0%, #6a3de8 100%);
         color: white;
@@ -19,7 +32,7 @@
     }
 
     .detail-info h2 {
-        font-size: 24px;
+        font-size: 26px;
         font-weight: 600;
         margin-bottom: 12px;
     }
@@ -27,7 +40,7 @@
     .detail-meta {
         display: flex;
         gap: 20px;
-        font-size: 13px;
+        font-size: 15px;
         opacity: 0.9;
     }
 
@@ -46,7 +59,7 @@
         color: white;
         border: none;
         border-radius: 4px;
-        font-size: 13px;
+        font-size: 15px;
         cursor: pointer;
         text-decoration: none;
         transition: background 0.2s;
@@ -60,7 +73,7 @@
         display: flex;
         gap: 8px;
         align-items: center;
-        font-size: 13px;
+        font-size: 15px;
         color: #6c757d;
         margin-bottom: 20px;
     }
@@ -95,14 +108,14 @@
     }
 
     .stat-number {
-        font-size: 28px;
+        font-size: 30px;
         font-weight: 700;
         color: #212529;
         margin-bottom: 6px;
     }
 
     .stat-label {
-        font-size: 12px;
+        font-size: 14px;
         color: #6c757d;
     }
 
@@ -151,7 +164,7 @@
     }
 
     .section-title {
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 600;
         color: #212529;
         margin-bottom: 20px;
@@ -172,7 +185,7 @@
     .info-table th {
         padding: 12px 0;
         text-align: left;
-        font-size: 12px;
+        font-size: 15px;
         color: #6c757d;
         font-weight: 600;
         width: 100px;
@@ -180,7 +193,7 @@
 
     .info-table td {
         padding: 12px 0;
-        font-size: 13px;
+        font-size: 15px;
         color: #212529;
     }
 
@@ -188,7 +201,7 @@
         display: inline-block;
         padding: 4px 10px;
         border-radius: 3px;
-        font-size: 11px;
+        font-size: 15px;
         font-weight: 600;
     }
 
@@ -224,7 +237,7 @@
         background: #f8f9fa;
         border: 1px solid #dee2e6;
         border-radius: 4px;
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 600;
         color: #212529;
         white-space: nowrap;
@@ -235,7 +248,7 @@
         padding: 10px 16px;
         border: 1px solid #ced4da;
         border-radius: 4px;
-        font-size: 14px;
+        font-size: 15px;
         background: white;
         height: 42px;
         min-width: 220px;
@@ -251,7 +264,7 @@
         color: white;
         border: none;
         border-radius: 4px;
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 500;
         text-decoration: none;
         cursor: pointer;
@@ -306,13 +319,13 @@
         background: white;
         border: 1px solid #dee2e6;
         border-radius: 4px;
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 600;
         color: #495057;
     }
 
     .check-name {
-        font-size: 14px;
+        font-size: 15px;
         color: #212529;
         font-weight: 500;
     }
@@ -326,7 +339,7 @@
     .status-badge {
         padding: 5px 12px;
         border-radius: 3px;
-        font-size: 11px;
+        font-size: 15px;
         font-weight: 600;
     }
 
@@ -352,7 +365,7 @@
 
     .expand-icon {
         color: #adb5bd;
-        font-size: 18px;
+        font-size: 20px;
         transition: transform 0.3s;
     }
 
@@ -380,14 +393,14 @@
     }
 
     .detail-section-title {
-        font-size: 12px;
+        font-size: 15px;
         font-weight: 600;
         color: #495057;
         margin-bottom: 8px;
     }
 
     .detail-section-content {
-        font-size: 13px;
+        font-size: 15px;
         color: #212529;
         line-height: 1.6;
         background: #f8f9fa;
@@ -399,212 +412,214 @@
 {% endblock %}
 
 {% block content %}
-<!-- 헤더 -->
-<div class="detail-header">
-    <div class="detail-header-content">
-        <div class="detail-info">
-            <h2>🗄️ {{ asset.name }}</h2>
-            <div class="detail-meta">
-                <div class="detail-meta-item">
-                    <span>📋</span>
-                    <span>자산코드: {{ asset.asset_code }}</span>
-                </div>
-                <div class="detail-meta-item">
-                    <span>💾</span>
-                    <span>호스트: {{ asset.hostname|default:"-" }}</span>
-                </div>
-                <div class="detail-meta-item">
-                    <span>🖥️</span>
-                    <span>OS: {{ asset.distro }} {{ asset.os_version }}</span>
-                </div>
-            </div>
-        </div>
-        <a href="javascript:history.back()" class="back-btn">← 목록으로 돌아가기</a>
-    </div>
-</div>
-
-<!-- Breadcrumb -->
-<div class="breadcrumb">
-    <a href="{% url 'dashboard:index' %}">🏠 자산 점검 대시보드</a>
-    <span>›</span>
-    {% if check_round %}
-    <a href="{% url 'dashboard:round_detail' check_round.id %}">{{ check_round }} 자산 목록</a>
-    <span>›</span>
-    {% endif %}
-    <span class="breadcrumb-current">{{ asset.asset_code }}</span>
-</div>
-
-<!-- 통계 카드 -->
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-number">{{ total_checks }}</div>
-        <div class="stat-label">총 점검 수</div>
-    </div>
-    <div class="stat-card good">
-        <div class="stat-number">{{ passed_checks }}</div>
-        <div class="stat-label">양호</div>
-    </div>
-    <div class="stat-card warning">
-        <div class="stat-number">{{ warning_checks }}</div>
-        <div class="stat-label">주의</div>
-    </div>
-    <div class="stat-card danger">
-        <div class="stat-number">{{ failed_checks }}</div>
-        <div class="stat-label">취약</div>
-    </div>
-    <div class="stat-card gray">
-        <div class="stat-number">{{ not_applicable_checks }}</div>
-        <div class="stat-label">해당없음</div>
-    </div>
-    <div class="stat-card primary">
-        <div class="stat-number">{{ pass_rate }}%</div>
-        <div class="stat-label">합격률</div>
-    </div>
-</div>
-
-<!-- 상세 정보 -->
-<div class="detail-body">
-    <!-- 차트 섹션 (왼쪽) -->
-    <div class="chart-section">
-        <div class="section-title">📊 점검 결과 분포</div>
-        <canvas id="statusChart"></canvas>
-    </div>
-
-    <!-- 자산 정보 (오른쪽) -->
-    <div class="info-section">
-        <div class="section-title">📋 자산 정보</div>
-        <table class="info-table">
-            <tr>
-                <th>자산 코드</th>
-                <td>{{ asset.asset_code }}</td>
-            </tr>
-            <tr>
-                <th>호스트</th>
-                <td>{{ asset.hostname|default:"N/A" }}</td>
-            </tr>
-            <tr>
-                <th>배포판</th>
-                <td>{{ asset.distro|default:"Unknown" }}</td>
-            </tr>
-            <tr>
-                <th>OS 버전</th>
-                <td>{{ asset.os_version|default:"Unknown" }}</td>
-            </tr>
-            <tr>
-                <th>커널</th>
-                <td>{{ asset.kernel|default:"N/A" }}</td>
-            </tr>
-            <tr>
-                <th>실행 방식</th>
-                <td>{{ asset.execution_type|default:"N/A" }}</td>
-            </tr>
-            <tr>
-                <th>컨테이너</th>
-                <td>{% if asset.is_container %}예{% else %}아니오{% endif %}</td>
-            </tr>
-            <tr>
-                <th>쿠버네티스</th>
-                <td>{% if asset.is_kubernetes %}예{% else %}아니오{% endif %}</td>
-            </tr>
-            <tr>
-                <th>최근 점검일</th>
-                <td>{{ latest_check.check_date|date:"Y-m-d H:i:s" }}</td>
-            </tr>
-            <tr>
-                <th>보안 상태</th>
-                <td>
-                    {% if latest_check.status == 'fail' %}
-                    <span class="status-label status-danger">취약</span>
-                    {% else %}
-                    <span class="status-label status-success">양호</span>
-                    {% endif %}
-                </td>
-            </tr>
-            <tr>
-                <th>합격률</th>
-                <td style="color: #007bff; font-weight: 600;">{{ pass_rate }}%</td>
-            </tr>
-        </table>
-    </div>
-
-    <!-- 상세 점검 항목 -->
-    <div class="checks-section">
-        <div class="checks-header">
-            <div class="checks-header-left">
-                <div class="section-title-box">
-                    🔍 상세 점검 항목 ({{ check_details|length }}개)
-                </div>
-                <form method="get" style="margin: 0;">
-                    <select name="status" class="filter-select" onchange="this.form.submit()">
-                        <option value="">전체</option>
-                        <option value="pass" {% if status_filter == 'pass' %}selected{% endif %}>양호</option>
-                        <option value="fail" {% if status_filter == 'fail' %}selected{% endif %}>취약</option>
-                        <option value="warn" {% if status_filter == 'warn' %}selected{% endif %}>주의</option>
-                        <option value="not_applicable" {% if status_filter == 'not_applicable' %}selected{% endif %}>해당없음</option>
-                    </select>
-                </form>
-            </div>
-            <a href="{% url 'dashboard:export_asset_excel' asset.id %}" class="btn-excel">
-                📥 Excel 다운로드
-            </a>
-        </div>
-
-        <div class="checks-list">
-            {% for check in check_details %}
-            <div class="check-item">
-                <div class="check-header" onclick="this.parentElement.classList.toggle('expanded')">
-                    <div class="check-info">
-                        <span class="check-code">{{ check.id }}</span>
-                        <span class="check-name">{{ check.name }}</span>
+<div class="container-wrapper">
+    <!-- 헤더 -->
+    <div class="detail-header">
+        <div class="detail-header-content">
+            <div class="detail-info">
+                <h2>🗄️ {{ asset.name }}</h2>
+                <div class="detail-meta">
+                    <div class="detail-meta-item">
+                        <span>📋</span>
+                        <span>자산코드: {{ asset.asset_code }}</span>
                     </div>
-                    <div class="check-status">
-                        {% if check.status_normalized == 'pass' %}
-                        <span class="status-badge badge-good">{{ check.status_display }}</span>
-                        {% elif check.status_normalized == 'fail' %}
-                        <span class="status-badge badge-danger">{{ check.status_display }}</span>
-                        {% elif check.status_normalized == 'warn' %}
-                        <span class="status-badge badge-warning">{{ check.status_display }}</span>
+                    <div class="detail-meta-item">
+                        <span>💾</span>
+                        <span>호스트: {{ asset.hostname|default:"-" }}</span>
+                    </div>
+                    <div class="detail-meta-item">
+                        <span>🖥️</span>
+                        <span>OS: {{ asset.distro }} {{ asset.os_version }}</span>
+                    </div>
+                </div>
+            </div>
+            <a href="javascript:history.back()" class="back-btn">← 목록으로 돌아가기</a>
+        </div>
+    </div>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard:index' %}">🏠 자산 점검 대시보드</a>
+        <span>›</span>
+        {% if check_round %}
+        <a href="{% url 'dashboard:round_detail' check_round.id %}">{{ check_round }} 자산 목록</a>
+        <span>›</span>
+        {% endif %}
+        <span class="breadcrumb-current">{{ asset.asset_code }}</span>
+    </div>
+
+    <!-- 통계 카드 -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_checks }}</div>
+            <div class="stat-label">총 점검 수</div>
+        </div>
+        <div class="stat-card good">
+            <div class="stat-number">{{ passed_checks }}</div>
+            <div class="stat-label">양호</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-number">{{ warning_checks }}</div>
+            <div class="stat-label">주의</div>
+        </div>
+        <div class="stat-card danger">
+            <div class="stat-number">{{ failed_checks }}</div>
+            <div class="stat-label">취약</div>
+        </div>
+        <div class="stat-card gray">
+            <div class="stat-number">{{ not_applicable_checks }}</div>
+            <div class="stat-label">해당없음</div>
+        </div>
+        <div class="stat-card primary">
+            <div class="stat-number">{{ pass_rate }}%</div>
+            <div class="stat-label">합격률</div>
+        </div>
+    </div>
+
+    <!-- 상세 정보 -->
+    <div class="detail-body">
+        <!-- 차트 섹션 (왼쪽) -->
+        <div class="chart-section">
+            <div class="section-title">📊 점검 결과 분포</div>
+            <canvas id="statusChart"></canvas>
+        </div>
+
+        <!-- 자산 정보 (오른쪽) -->
+        <div class="info-section">
+            <div class="section-title">📋 자산 정보</div>
+            <table class="info-table">
+                <tr>
+                    <th>자산 코드</th>
+                    <td>{{ asset.asset_code }}</td>
+                </tr>
+                <tr>
+                    <th>호스트</th>
+                    <td>{{ asset.hostname|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <th>배포판</th>
+                    <td>{{ asset.distro|default:"Unknown" }}</td>
+                </tr>
+                <tr>
+                    <th>OS 버전</th>
+                    <td>{{ asset.os_version|default:"Unknown" }}</td>
+                </tr>
+                <tr>
+                    <th>커널</th>
+                    <td>{{ asset.kernel|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <th>실행 방식</th>
+                    <td>{{ asset.execution_type|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <th>컨테이너</th>
+                    <td>{% if asset.is_container %}예{% else %}아니오{% endif %}</td>
+                </tr>
+                <tr>
+                    <th>쿠버네티스</th>
+                    <td>{% if asset.is_kubernetes %}예{% else %}아니오{% endif %}</td>
+                </tr>
+                <tr>
+                    <th>최근 점검일</th>
+                    <td>{{ latest_check.check_date|date:"Y-m-d H:i:s" }}</td>
+                </tr>
+                <tr>
+                    <th>보안 상태</th>
+                    <td>
+                        {% if latest_check.status == 'fail' %}
+                        <span class="status-label status-danger">취약</span>
                         {% else %}
-                        <span class="status-badge badge-gray">{{ check.status_display }}</span>
+                        <span class="status-label status-success">양호</span>
                         {% endif %}
-                        <span class="expand-icon">▼</span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>합격률</th>
+                    <td style="color: #007bff; font-weight: 600;">{{ pass_rate }}%</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 상세 점검 항목 -->
+        <div class="checks-section">
+            <div class="checks-header">
+                <div class="checks-header-left">
+                    <div class="section-title-box">
+                        🔍 상세 점검 항목 ({{ check_details|length }}개)
+                    </div>
+                    <form method="get" style="margin: 0;">
+                        <select name="status" class="filter-select" onchange="this.form.submit()">
+                            <option value="">전체</option>
+                            <option value="pass" {% if status_filter == 'pass' %}selected{% endif %}>양호</option>
+                            <option value="fail" {% if status_filter == 'fail' %}selected{% endif %}>취약</option>
+                            <option value="warn" {% if status_filter == 'warn' %}selected{% endif %}>주의</option>
+                            <option value="not_applicable" {% if status_filter == 'not_applicable' %}selected{% endif %}>해당없음</option>
+                        </select>
+                    </form>
+                </div>
+                <a href="{% url 'dashboard:export_asset_excel' asset.id %}" class="btn-excel">
+                    📥 Excel 다운로드
+                </a>
+            </div>
+
+            <div class="checks-list">
+                {% for check in check_details %}
+                <div class="check-item">
+                    <div class="check-header" onclick="this.parentElement.classList.toggle('expanded')">
+                        <div class="check-info">
+                            <span class="check-code">{{ check.id }}</span>
+                            <span class="check-name">{{ check.name }}</span>
+                        </div>
+                        <div class="check-status">
+                            {% if check.status_normalized == 'pass' %}
+                            <span class="status-badge badge-good">{{ check.status_display }}</span>
+                            {% elif check.status_normalized == 'fail' %}
+                            <span class="status-badge badge-danger">{{ check.status_display }}</span>
+                            {% elif check.status_normalized == 'warn' %}
+                            <span class="status-badge badge-warning">{{ check.status_display }}</span>
+                            {% else %}
+                            <span class="status-badge badge-gray">{{ check.status_display }}</span>
+                            {% endif %}
+                            <span class="expand-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="check-details">
+                        {% if check.details %}
+                        <div class="detail-section">
+                            <div class="detail-section-title">📌 점검 내용:</div>
+                            <div class="detail-section-content">{{ check.details }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if check.checked_paths %}
+                        <div class="detail-section">
+                            <div class="detail-section-title">📂 점검 경로:</div>
+                            <div class="detail-section-content">{{ check.checked_paths }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if check.commands_executed %}
+                        <div class="detail-section">
+                            <div class="detail-section-title">⌨️ 실행 명령어:</div>
+                            <div class="detail-section-content">{{ check.commands_executed }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if check.recommendation %}
+                        <div class="detail-section">
+                            <div class="detail-section-title">💡 조치사항:</div>
+                            <div class="detail-section-content">{{ check.recommendation }}</div>
+                        </div>
+                        {% endif %}
                     </div>
                 </div>
-                <div class="check-details">
-                    {% if check.details %}
-                    <div class="detail-section">
-                        <div class="detail-section-title">📌 점검 내용:</div>
-                        <div class="detail-section-content">{{ check.details }}</div>
-                    </div>
-                    {% endif %}
-
-                    {% if check.checked_paths %}
-                    <div class="detail-section">
-                        <div class="detail-section-title">📂 점검 경로:</div>
-                        <div class="detail-section-content">{{ check.checked_paths }}</div>
-                    </div>
-                    {% endif %}
-
-                    {% if check.commands_executed %}
-                    <div class="detail-section">
-                        <div class="detail-section-title">⌨️ 실행 명령어:</div>
-                        <div class="detail-section-content">{{ check.commands_executed }}</div>
-                    </div>
-                    {% endif %}
-
-                    {% if check.recommendation %}
-                    <div class="detail-section">
-                        <div class="detail-section-title">💡 권장사항:</div>
-                        <div class="detail-section-content">{{ check.recommendation }}</div>
-                    </div>
-                    {% endif %}
+                {% empty %}
+                <div style="text-align: center; padding: 40px; color: #6c757d;">
+                    점검 항목이 없습니다.
                 </div>
+                {% endfor %}
             </div>
-            {% empty %}
-            <div style="text-align: center; padding: 40px; color: #6c757d;">
-                점검 항목이 없습니다.
-            </div>
-            {% endfor %}
         </div>
     </div>
 </div>

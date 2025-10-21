@@ -1,0 +1,273 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}회차별 점검 현황 - 자산 점검 대시보드{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 컨텐츠 영역 제한 */
+    body {
+        background: #f5f5f5;
+    }
+    
+    .container-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        background: white;
+        min-height: 100vh;
+    }
+
+    .filter-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 6px;
+        margin-bottom: 30px;
+        border: 1px solid #e9ecef;
+    }
+
+    .filter-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 15px;
+    }
+
+    .filter-row {
+        display: grid;
+        grid-template-columns: auto 1fr auto 1fr auto auto;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .filter-label {
+        font-size: 15px;
+        color: #6c757d;
+        white-space: nowrap;
+    }
+
+    .filter-input, .filter-select {
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 15px;
+        background: white;
+    }
+
+    .date-section {
+        margin-bottom: 30px;
+    }
+
+    .date-header {
+        background: #f8f9fa;
+        padding: 12px 20px;
+        border-radius: 6px 6px 0 0;
+        border: 1px solid #dee2e6;
+        border-bottom: none;
+    }
+
+    .date-header strong {
+        font-size: 20px;
+        color: #495057;
+    }
+
+    .rounds-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border: 1px solid #dee2e6;
+    }
+
+    .rounds-table thead {
+        background: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .rounds-table th {
+        padding: 14px 16px;
+        text-align: left;
+        font-size: 15px;
+        font-weight: 600;
+        color: #495057;
+    }
+
+    .rounds-table th:first-child {
+        text-align: center;
+        width: 80px;
+    }
+
+    .rounds-table tbody tr {
+        border-bottom: 1px solid #e9ecef;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .rounds-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .rounds-table td {
+        padding: 16px;
+        font-size: 15px;
+        color: #212529;
+        vertical-align: middle;
+    }
+
+    .rounds-table td:first-child {
+        text-align: center;
+        font-weight: 600;
+        color: #7c4dff;
+        padding: 16px;
+    }
+
+    .round-badge {
+        display: inline-block;
+        padding: 6px 16px;
+        background: #e8deff;
+        color: #333;
+        border-radius: 20px;
+        font-size: 15px;
+        font-weight: 600;
+        white-space: nowrap;
+        line-height: 1.4;
+    }
+
+    .stat-inline {
+        display: inline-flex;
+        gap: 20px;
+    }
+
+    .stat-inline-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .stat-inline-label {
+        font-size: 13px;
+        color: #6c757d;
+    }
+
+    .stat-inline-value {
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .stat-good { color: #28a745; }
+    .stat-warning { color: #ffc107; }
+    .stat-bad { color: #dc3545; }
+    .stat-info { color: #6c757d; }
+
+    .empty-message {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+        font-size: 18px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-wrapper">
+    <h2 style="margin-bottom: 20px; font-size: 22px; font-weight: 600; color: #212529;">
+        📅 점검 회차별 현황
+    </h2>
+
+    <!-- 필터 섹션 -->
+	<div class="filter-section">	
+	    <div class="filter-title">🔍 필터링</div>
+	    <form method="get" class="filter-row">
+		<span class="filter-label">점검 날짜</span>
+		<select name="date" class="filter-select">
+		    <option value="">전체</option>
+		    {% for date in all_dates %}
+		    <option value="{{ date|date:'Y-m-d' }}" {% if filter_date == date|date:"Y-m-d" %}selected{% endif %}>
+			{{ date }}
+		    </option>
+		    {% endfor %}
+		</select>
+		
+		<span class="filter-label">회차</span>
+		<select name="round" class="filter-select">
+		    <option value="">전체</option>
+		    {% for round_num in all_rounds %}
+		    <option value="{{ round_num }}" {% if filter_round == round_num|stringformat:"s" %}selected{% endif %}>
+			{{ round_num }}회차
+		    </option>
+		    {% endfor %}
+		</select>
+		
+		<button type="submit" class="btn btn-primary">검색</button>
+		<a href="{% url 'dashboard:rounds_list' %}" class="btn btn-secondary">초기화</a>
+	    </form>
+	</div>
+    <!-- 날짜별 테이블 -->
+    {% if rounds_list %}
+        {% for date_group in rounds_list %}
+        <div class="date-section">
+            <div class="date-header">
+                <strong>📅 {{ date_group.date }}</strong>
+            </div>
+            <table class="rounds-table">
+                <thead>
+                    <tr>
+                        <th>회차</th>
+                        <th>점검 일시</th>
+                        <th>총 자산 수</th>
+                        <th>점검 통계</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for round in date_group.rounds %}
+                    <tr onclick="location.href='{% url 'dashboard:round_detail' round.id %}'">
+                        <td>
+                            <span class="round-badge">{{ round.round_number }}회차</span>
+                        </td>
+                        <td>{{ round.datetime_str }}</td>
+                        <td><strong>{{ round.total_assets }}개</strong></td>
+                        <td>
+                            <div class="stat-inline">
+                                <div class="stat-inline-item">
+                                    <span class="stat-inline-label">양호</span>
+                                    <span class="stat-inline-value stat-good">{{ round.stats.total_passed }}</span>
+                                </div>
+                                <div class="stat-inline-item">
+                                    <span class="stat-inline-label">주의</span>
+                                    <span class="stat-inline-value stat-warning">{{ round.stats.total_warnings }}</span>
+                                </div>
+                                <div class="stat-inline-item">
+                                    <span class="stat-inline-label">취약</span>
+                                    <span class="stat-inline-value stat-bad">{{ round.stats.total_failed }}</span>
+                                </div>
+                                <div class="stat-inline-item">
+                                    <span class="stat-inline-label">해당없음</span>
+                                    <span class="stat-inline-value stat-info">{{ round.stats.total_na }}</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-message">
+            <p>🔭 필터 조건에 맞는 데이터가 없습니다.</p>
+            <p style="font-size: 14px; margin-top: 10px; color: #6c757d;">
+                {% if filter_date and filter_round %}
+                    날짜: {{ filter_date }}, 회차: {{ filter_round }}회차에 해당하는 데이터가 없습니다.
+                {% elif filter_date %}
+                    날짜: {{ filter_date }}에 해당하는 데이터가 없습니다.
+                {% elif filter_round %}
+                    {{ filter_round }}회차에 해당하는 데이터가 없습니다.
+                {% else %}
+                    점검 데이터가 없습니다.
+                {% endif %}
+            </p>
+            <a href="{% url 'dashboard:rounds_list' %}" class="btn btn-primary" style="margin-top: 15px; display: inline-block; padding: 10px 20px; border-radius: 4px; text-decoration: none;">
+                전체 보기
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

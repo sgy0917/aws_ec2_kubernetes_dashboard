@@ -1,244 +1,521 @@
 {% extends 'dashboard/base.html' %}
 
-{% block title %}회차별 점검 현황 - 자산 점검 대시보드{% endblock %}
+{% block title %}메인 대시보드{% endblock %}
 
 {% block extra_css %}
 <style>
-    .filter-section {
-        background: #f8f9fa;
+    /* 컨텐츠 영역 제한 */
+    body {
+        background: #f5f5f5;
+    }
+    
+    .container-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
         padding: 20px;
-        border-radius: 6px;
-        margin-bottom: 30px;
-        border: 1px solid #e9ecef;
+        background: white;
+        min-height: 100vh;
     }
 
-    .filter-title {
-        font-size: 13px;
-        font-weight: 600;
-        color: #495057;
-        margin-bottom: 15px;
-    }
-
-    .filter-row {
+    .main-dashboard {
         display: grid;
-        grid-template-columns: auto 1fr auto 1fr auto auto;
-        gap: 12px;
-        align-items: center;
+        gap: 25px;
     }
 
-    .filter-label {
-        font-size: 13px;
-        color: #6c757d;
-        white-space: nowrap;
-    }
-
-    .filter-input, .filter-select {
-        padding: 8px 12px;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-        font-size: 13px;
-        background: white;
-    }
-
-    .date-section {
-        margin-bottom: 30px;
-    }
-
-    .date-header {
-        background: #f8f9fa;
-        padding: 12px 20px;
-        border-radius: 6px 6px 0 0;
-        border: 1px solid #dee2e6;
-        border-bottom: none;
-    }
-
-    .date-header strong {
-        font-size: 15px;
-        color: #495057;
-    }
-
-    .rounds-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border: 1px solid #dee2e6;
-    }
-
-    .rounds-table thead {
-        background: #f8f9fa;
-        border-bottom: 2px solid #dee2e6;
-    }
-
-    .rounds-table th {
-        padding: 14px 16px;
-        text-align: left;
-        font-size: 13px;
-        font-weight: 600;
-        color: #495057;
-    }
-
-    .rounds-table th:first-child {
-        text-align: center;
-        width: 80px;
-    }
-
-    .rounds-table tbody tr {
-        border-bottom: 1px solid #e9ecef;
-        cursor: pointer;
-        transition: background 0.2s;
-    }
-
-    .rounds-table tbody tr:hover {
-        background: #f8f9fa;
-    }
-
-    .rounds-table td {
-        padding: 16px;
-        font-size: 13px;
-        color: #212529;
-        vertical-align: middle;
-    }
-
-    .rounds-table td:first-child {
-        text-align: center;
-        font-weight: 600;
-        color: #7c4dff;
-        padding: 16px;
-    }
-
-    .round-badge {
-        display: inline-block;
-        padding: 6px 16px;
-        background: #e8deff;
-        color: #333;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 600;
-        white-space: nowrap;
-        line-height: 1.4;
-    }
-
-    .stat-inline {
-        display: inline-flex;
+    /* 상단 통계 카드 */
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
         gap: 20px;
     }
 
-    .stat-inline-item {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+    .stat-card {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        border-left: 4px solid #7c4dff;
     }
 
-    .stat-inline-label {
-        font-size: 11px;
+    .stat-card.assets {
+        border-left-color: #7c4dff;
+    }
+
+    .stat-card.rounds {
+        border-left-color: #2196F3;
+    }
+
+    .stat-card.checks {
+        border-left-color: #4CAF50;
+    }
+
+    .stat-card.total-cost {
+        border-left-color: #FF9800;
+    }
+
+    .stat-card.check-cost {
+        border-left-color: #E91E63;
+    }
+
+    .stat-card-label {
+        font-size: 14px;
+        color: #6c757d;
+        margin-bottom: 8px;
+    }
+
+    .stat-card-value {
+        font-size: 33px;
+        font-weight: 700;
+        color: #212529;
+    }
+
+    .stat-card-detail {
+        font-size: 13px;
+        color: #6c757d;
+        margin-top: 8px;
+    }
+
+    /* 총 누적 비용 카드 강조 */
+    .stat-card.total-cost .stat-card-value {
+        color: #FF9800;
+    }
+
+    /* 점검 시작 버튼 */
+    .check-action {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .check-action-info h3 {
+        font-size: 20px;
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 8px;
+    }
+
+    .check-action-info p {
+        font-size: 15px;
         color: #6c757d;
     }
 
-    .stat-inline-value {
-        font-size: 16px;
+    .api-status {
+        margin-top: 10px;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 13px;
         font-weight: 600;
     }
 
-    .stat-good { color: #28a745; }
-    .stat-warning { color: #ffc107; }
-    .stat-bad { color: #dc3545; }
-    .stat-info { color: #6c757d; }
+    .status-badge.running {
+        background: #d4edda;
+        color: #155724;
+    }
 
-    .empty-message {
-        text-align: center;
-        padding: 60px 20px;
-        color: #6c757d;
+    .status-badge.stopped {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .btn-start-check {
+        padding: 12px 30px;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 6px;
         font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-start-check:hover {
+        background: #218838;
+    }
+
+    .btn-start-check:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+    }
+
+    /* 그래프 영역 */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+    }
+
+    .chart-card {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .chart-card h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #f8f9fa;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+
+    /* 비용 설명 */
+    .cost-info {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 15px;
+        margin-top: 15px;
+        font-size: 14px;
+        color: #495057;
+    }
+
+    .cost-info strong {
+        color: #212529;
+    }
+
+    /* 최신 통계 */
+    .latest-stats {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .latest-stats h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 20px;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 6px;
+    }
+
+    .stat-item-value {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .stat-item-value.good { color: #28a745; }
+    .stat-item-value.warning { color: #ffc107; }
+    .stat-item-value.danger { color: #dc3545; }
+    .stat-item-value.gray { color: #6c757d; }
+
+    .stat-item-label {
+        font-size: 16px;
+        color: #6c757d;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<h2 style="margin-bottom: 20px; font-size: 22px; font-weight: 600; color: #212529;">
-    📅 점검 회차별 현황
-</h2>
+<div class="container-wrapper">
+    <div class="main-dashboard">
+        <!-- 상단 통계 카드 -->
+        <div class="stats-cards">
+            <div class="stat-card assets">
+                <div class="stat-card-label">총 자산</div>
+                <div class="stat-card-value">{{ total_assets }}</div>
+                <div class="stat-card-detail">관리 중인 자산</div>
+            </div>
+            
+            <div class="stat-card rounds">
+                <div class="stat-card-label">총 점검 회차</div>
+                <div class="stat-card-value">{{ total_rounds }}</div>
+                <div class="stat-card-detail">누적 점검 이력</div>
+            </div>
+            
+            <div class="stat-card checks">
+                <div class="stat-card-label">최근 점검</div>
+                <div class="stat-card-value">
+                    {% if latest_round %}
+                    {{ latest_round.round_number }}회차
+                    {% else %}
+                    -
+                    {% endif %}
+                </div>
+                <div class="stat-card-detail">
+                    {% if latest_round %}
+                    {{ latest_round.check_date }}
+                    {% else %}
+                    데이터 없음
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="stat-card total-cost">
+                <div class="stat-card-label">💰 총 누적 비용</div>
+                <div class="stat-card-value">${{ total_cost }}</div>
+                <div class="stat-card-detail">인프라 + 점검 비용</div>
+            </div>
 
-<!-- 필터 섹션 -->
-<div class="filter-section">
-    <div class="filter-title">🔍 필터링</div>
-    <form method="get" class="filter-row">
-        <span class="filter-label">점검 날짜</span>
-        <select name="date" class="filter-select">
-            <option value="">전체</option>
-            {% for date in all_dates %}
-            <option value="{{ date }}" {% if filter_date == date|date:"Y-m-d" %}selected{% endif %}>
-                {{ date }}
-            </option>
-            {% endfor %}
-        </select>
-        <span class="filter-label">회차</span>
-        <select name="round" class="filter-select">
-            <option value="">전체</option>
-            {% for round_num in all_rounds %}
-            <option value="{{ round_num }}" {% if filter_round == round_num|stringformat:"s" %}selected{% endif %}>
-                {{ round_num }}회차
-            </option>
-            {% endfor %}
-        </select>
-        <button type="submit" class="btn btn-primary">검색</button>
-        <a href="{% url 'dashboard:index' %}" class="btn btn-secondary">초기화</a>
-    </form>
-</div>
-
-<!-- 날짜별 테이블 -->
-{% if rounds_list %}
-    {% for date_group in rounds_list %}
-    <div class="date-section">
-        <div class="date-header">
-            <strong>📅 {{ date_group.date }}</strong>
+            <div class="stat-card check-cost">
+                <div class="stat-card-label">점검 누적 비용</div>
+                <div class="stat-card-value">${{ total_check_cost }}</div>
+                <div class="stat-card-detail">${{ check_cost_per_run }} × {{ total_rounds }}회</div>
+            </div>
         </div>
-        <table class="rounds-table">
-            <thead>
-                <tr>
-                    <th>회차</th>
-                    <th>점검 일시</th>
-                    <th>이 자산 수</th>
-                    <th>점검 통계</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for round in date_group.rounds %}
-                <tr onclick="location.href='{% url 'dashboard:round_detail' round.id %}'">
-                    <td>
-                        <span class="round-badge">{{ round.round_number }}회차</span>
-                    </td>
-                    <td>{{ round.datetime_str }}</td>
-                    <td><strong>{{ round.total_assets }}개</strong></td>
-                    <td>
-                        <div class="stat-inline">
-                            <div class="stat-inline-item">
-                                <span class="stat-inline-label">양호</span>
-                                <span class="stat-inline-value stat-good">{{ round.stats.total_passed }}</span>
-                            </div>
-                            <div class="stat-inline-item">
-                                <span class="stat-inline-label">주의</span>
-                                <span class="stat-inline-value stat-warning">{{ round.stats.total_warnings }}</span>
-                            </div>
-                            <div class="stat-inline-item">
-                                <span class="stat-inline-label">취약</span>
-                                <span class="stat-inline-value stat-bad">{{ round.stats.total_failed }}</span>
-                            </div>
-                            <div class="stat-inline-item">
-                                <span class="stat-inline-label">해당없음</span>
-                                <span class="stat-inline-value stat-info">{{ round.stats.total_na }}</span>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+        <!-- 점검 시작 버튼 -->
+        <div class="check-action">
+            <div class="check-action-info">
+                <h3>🔍 보안 점검 시작</h3>
+                <p>모든 자산에 대한 보안 점검을 시작합니다. (점검 1회당 ${{ check_cost_per_run }})</p>
+                <div class="api-status">
+                    {% if api_server_status == 'running' %}
+                    <span class="status-badge running">● API 서버 실행 중</span>
+                    {% else %}
+                    <span class="status-badge stopped">● API 서버 정지됨</span>
+                    {% endif %}
+                </div>
+            </div>
+            <button class="btn-start-check" onclick="startSecurityCheck()">
+                <span>▶</span>
+                <span>점검 시작</span>
+            </button>
+        </div>
+
+        <!-- 그래프 영역 -->
+        <div class="charts-grid">
+            <!-- 회차별 점검 통계 -->
+            <div class="chart-card">
+                <h3>📊 회차별 점검 통계 (최근 7일)</h3>
+                <div class="chart-container">
+                    <canvas id="checksChart"></canvas>
+                </div>
+            </div>
+
+            <!-- 자산별 비용 -->
+            <div class="chart-card">
+                <h3>💰 자산별 월간 인프라 비용</h3>
+                <div class="chart-container">
+                    <canvas id="costChart"></canvas>
+                </div>
+                <div class="cost-info">
+                    <strong>비용 산정 기준:</strong><br>
+                    • vCPU 1개당 $50/월<br>
+                    • 메모리 1GB당 $10/월<br>
+                    • 점검 1회당 ${{ check_cost_per_run }}<br>
+                    <br>
+                    <strong>예시:</strong><br>
+                    • Alpine: 1 vCPU, 1GB = $60/월<br>
+                    • Ubuntu: 2 vCPU, 4GB = $140/월<br>
+                    • Debian: 2 vCPU, 2GB = $120/월<br>
+                    <br>
+                    <strong>총 비용:</strong><br>
+                    • 월간 인프라: ${{ infrastructure_cost }}<br>
+                    • 점검 누적: ${{ total_check_cost }}<br>
+                    • <span style="color: #FF9800; font-weight: 600;">총 누적 비용: ${{ total_cost }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 최신 점검 통계 -->
+        {% if latest_round %}
+        <div class="latest-stats">
+            <h3>📈 최신 점검 결과 ({{ latest_round }})</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-item-value good">{{ latest_stats.total_passed }}</div>
+                    <div class="stat-item-label">양호</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-item-value warning">{{ latest_stats.total_warnings }}</div>
+                    <div class="stat-item-label">주의</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-item-value danger">{{ latest_stats.total_failed }}</div>
+                    <div class="stat-item-label">취약</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-item-value gray">{{ latest_stats.total_na }}</div>
+                    <div class="stat-item-label">해당없음</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
-    {% endfor %}
-{% else %}
-    <div class="empty-message">
-        <p>🔭 점검 데이터가 없습니다.</p>
-        <p style="font-size: 14px; margin-top: 10px;">JSON 파일을 임포트하여 데이터를 추가하세요.</p>
-    </div>
-{% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    // CSRF 토큰 가져오기
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const csrftoken = getCookie('csrftoken');
+
+    // 점검 시작 함수
+    async function startSecurityCheck() {
+        const button = document.querySelector('.btn-start-check');
+        button.disabled = true;
+        button.innerHTML = '<span>⏳</span><span>준비 중...</span>';
+        
+        try {
+            const response = await fetch('{% url "dashboard:start_check" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                button.innerHTML = '<span>✓</span><span>점검 시작됨</span>';
+                alert('✅ ' + data.message + '\n\n점검이 완료되면 회차별 점검 현황에서 결과를 확인할 수 있습니다.\n💰 점검 비용 ${{ check_cost_per_run }}이 추가됩니다.');
+                
+                // 5초 후 페이지 새로고침
+                setTimeout(() => location.reload(), 5000);
+            } else {
+                alert('❌ ' + data.message);
+                button.disabled = false;
+                button.innerHTML = '<span>▶</span><span>점검 시작</span>';
+            }
+        } catch (error) {
+            alert('❌ 오류가 발생했습니다: ' + error.message);
+            button.disabled = false;
+            button.innerHTML = '<span>▶</span><span>점검 시작</span>';
+        }
+    }
+
+    // 회차별 점검 통계 차트
+    const checksCtx = document.getElementById('checksChart').getContext('2d');
+    const checksChart = new Chart(checksCtx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_dates|safe }},
+            datasets: [
+                {
+                    label: '양호',
+                    data: {{ chart_passed|safe }},
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: '취약',
+                    data: {{ chart_failed|safe }},
+                    borderColor: '#dc3545',
+                    backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                    tension: 0.4
+                },
+                {
+                    label: '주의',
+                    data: {{ chart_warnings|safe }},
+                    borderColor: '#ffc107',
+                    backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // 자산별 비용 차트
+    const costCtx = document.getElementById('costChart').getContext('2d');
+    const costChart = new Chart(costCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ cost_labels|safe }},
+            datasets: [{
+                label: '월간 비용 ($)',
+                data: {{ cost_data|safe }},
+                backgroundColor: [
+                    '#7c4dff',
+                    '#2196F3',
+                    '#4CAF50',
+                    '#FF9800',
+                    '#f44336',
+                    '#9C27B0',
+                    '#00BCD4',
+                    '#CDDC39',
+                    '#FF5722',
+                    '#607D8B',
+                    '#E91E63',
+                    '#795548',
+                    '#3F51B5',
+                    '#009688'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
 {% endblock %}
