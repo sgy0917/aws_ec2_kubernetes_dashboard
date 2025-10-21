@@ -4,11 +4,24 @@
 
 {% block extra_css %}
 <style>
+    /* 컨텐츠 영역 제한 */
+    body {
+        background: #f5f5f5;
+    }
+    
+    .container-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        background: white;
+        min-height: 100vh;
+    }
+
     .breadcrumb {
         display: flex;
         gap: 8px;
         align-items: center;
-        font-size: 13px;
+        font-size: 15px;
         color: #6c757d;
         margin-bottom: 20px;
     }
@@ -28,7 +41,7 @@
     }
 
     .page-title {
-        font-size: 22px;
+        font-size: 24px;
         font-weight: 600;
         color: #212529;
         margin-bottom: 20px;
@@ -93,13 +106,13 @@
     .assets-table th {
         padding: 14px 16px;
         text-align: left;
-        font-size: 13px;
+        font-size: 15px;
         font-weight: 600;
         color: #495057;
     }
 
     .assets-table th:first-child {
-        text-align: center;
+    
         width: 60px;
     }
 
@@ -115,7 +128,7 @@
 
     .assets-table td {
         padding: 14px 16px;
-        font-size: 13px;
+        font-size: 15px;
         color: #212529;
         vertical-align: middle;
     }
@@ -128,7 +141,7 @@
     .asset-code {
         color: #7c4dff;
         font-weight: 600;
-        font-size: 12px;
+        font-size: 15px;
     }
 
     .status-badges {
@@ -141,7 +154,7 @@
         display: inline-block;
         padding: 3px 10px;
         border-radius: 3px;
-        font-size: 11px;
+        font-size: 15px;
         font-weight: 600;
         text-align: center;
     }
@@ -172,70 +185,70 @@
         background: #6c757d;
         color: white;
         border-radius: 3px;
-        font-size: 11px;
+        font-size: 15px;
         font-weight: 600;
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Breadcrumb -->
-<div class="breadcrumb">
-    <a href="{% url 'dashboard:index' %}">🏠 자산 점검 대시보드</a>
-    <span>›</span>
-    <span class="breadcrumb-current">{{ check_round.check_date }} {{ check_round.round_number }}회차 자산 목록 ({{ total_assets }}개)</span>
+<div class="container-wrapper">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="{% url 'dashboard:index' %}">🏠 자산 점검 대시보드</a>
+        <span>›</span>
+        <span class="breadcrumb-current">{{ check_round.check_date }} {{ check_round.round_number }}회차 자산 목록 ({{ total_assets }}개)</span>
+    </div>
+
+    <h2 class="page-title">
+        📊 {{ check_round }} - 자산 목록
+    </h2>
+
+    <!-- 자산 목록 테이블 -->
+    <table class="assets-table">
+        <thead>
+            <tr>
+                <th>번호</th>
+                <th>분류코드</th>
+                <th>자산명</th>
+                <th>보안상태</th>
+                <th>점검일시</th>
+                <th>호스트</th>
+                <th>OS 버전</th>
+                <th>실행방식</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for asset in assets %}
+            <tr onclick="location.href='{% url 'dashboard:asset_detail' asset.id %}'">
+                <td>{{ forloop.counter }}</td>
+                <td>
+                    <span class="asset-code">{{ asset.asset_code }}</span>
+                </td>
+                <td><strong>{{ asset.name }}</strong></td>
+                <td>
+                    <div class="status-badges">
+                        <span class="status-badge badge-good">양호 {{ asset.passed }}개</span>
+                        <span class="status-badge badge-warning">주의 {{ asset.warnings }}개</span>
+                        <span class="status-badge badge-danger">취약 {{ asset.failed }}개</span>
+                        <span class="status-badge badge-gray">해당없음 {{ asset.na }}개</span>
+                    </div>
+                </td>
+                <td>{{ asset.check_date|date:"Y-m-d H:i" }}</td>
+                <td>{{ asset.hostname|default:"-" }}</td>
+                <td>
+                    <span class="os-badge">{{ asset.distro }} {{ asset.os_version }}</span>
+                </td>
+                <td>{{ asset.execution_type|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 40px; color: #6c757d;">
+                    해당 회차에 자산이 없습니다.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
-
-<h2 class="page-title">
-    📊 {{ check_round }} - 자산 목록
-</h2>
-
-
-
-<!-- 자산 목록 테이블 -->
-<table class="assets-table">
-    <thead>
-        <tr>
-            <th>번호</th>
-            <th>분류코드</th>
-            <th>자산명</th>
-            <th>보안상태</th>
-            <th>점검일시</th>
-            <th>호스트</th>
-            <th>OS 버전</th>
-            <th>실행방식</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for asset in assets %}
-        <tr onclick="location.href='{% url 'dashboard:asset_detail' asset.id %}'">
-            <td>{{ forloop.counter }}</td>
-            <td>
-                <span class="asset-code">{{ asset.asset_code }}</span>
-            </td>
-            <td><strong>{{ asset.name }}</strong></td>
-            <td>
-                <div class="status-badges">
-                    <span class="status-badge badge-good">양호 {{ asset.passed }}개</span>
-                    <span class="status-badge badge-warning">주의 {{ asset.warnings }}개</span>
-                    <span class="status-badge badge-danger">취약 {{ asset.failed }}개</span>
-                    <span class="status-badge badge-gray">해당없음 {{ asset.na }}개</span>
-                </div>
-            </td>
-            <td>{{ asset.check_date|date:"Y-m-d H:i" }}</td>
-            <td>{{ asset.hostname|default:"-" }}</td>
-            <td>
-                <span class="os-badge">{{ asset.distro }} {{ asset.os_version }}</span>
-            </td>
-            <td>{{ asset.execution_type|default:"-" }}</td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="8" style="text-align: center; padding: 40px; color: #6c757d;">
-                해당 회차에 자산이 없습니다.
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
 {% endblock %}
