@@ -1,19 +1,28 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, JsonResponse
-from django.db.models import Count, Q, Sum, Avg
+from django.http import JsonResponse, HttpResponse
+from django.conf import settings
+from django.db.models import Count, Q
+from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, timedelta
 from collections import defaultdict
-from dashboard.models import Asset, SecurityCheck, CheckRound
 import json
-from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 import requests
-import subprocess
-import os
-import time
-from django.conf import settings  
+import openpyxl
+from openpyxl.styles import Font, Alignment, PatternFill
 
-API_SERVER_URL = settings.API_SERVER_URL
+from .models import CheckRound, Asset, SecurityCheck
+
+
+def check_api_server_status():
+    """API 서버 상태 확인"""
+    try:
+        response = requests.get(f"{settings.API_SERVER_URL}/health", timeout=5)
+        if response.status_code == 200:
+            return 'running'
+    except:
+        pass
+    return 'stopped'
+
 
 def index(request):
     """
@@ -41,7 +50,7 @@ def index(request):
         chart_failed.append(stats['total_failed'])
         chart_warnings.append(stats['total_warnings'])
     
-    # 자산별 비용 계산
+    # 자산별 비용 계산 (전체 자산 기준)
     assets = Asset.objects.all()
     asset_costs = []
     
@@ -72,19 +81,23 @@ def index(request):
         })
     
     # 전체 통계
-    total_assets = Asset.objects.count()
     total_rounds = CheckRound.objects.count()
     latest_round = CheckRound.objects.order_by('-check_date', '-round_number').first()
+    
+    # 최근 점검 회차의 자산 개수 (카드 표시용)
+    latest_round_assets = 0
+    if latest_round:
+        latest_round_assets = latest_round.get_total_assets()
     
     latest_stats = {}
     if latest_round:
         latest_stats = latest_round.get_statistics()
     
-    # 인프라 월간 비용
+    # 인프라 월간 비용 (전체 자산 기준)
     infrastructure_cost = sum(item['cost'] for item in asset_costs) if asset_costs else 0
     
     # 점검 비용 계산
-    CHECK_COST_PER_RUN = 10  # 점검 1회당 $10
+    CHECK_COST_PER_RUN = 10
     total_check_cost = total_rounds * CHECK_COST_PER_RUN
     
     # 총 비용
@@ -94,7 +107,7 @@ def index(request):
     api_server_status = check_api_server_status()
     
     context = {
-        'total_assets': total_assets,
+        'latest_round_assets': latest_round_assets,  # 최근 점검한 자산 개수
         'total_rounds': total_rounds,
         'latest_round': latest_round,
         'latest_stats': latest_stats,
@@ -116,69 +129,9 @@ def index(request):
     
     return render(request, 'dashboard/index.html', context)
 
-def check_api_server_status():
-    """API 서버 실행 상태 확인"""
-    try:
-        # /api 경로 추가!
-        response = requests.get(f'{API_SERVER_URL}/api/health', timeout=2)
-        if response.status_code == 200:
-            return 'running'
-    except Exception as e:
-        print(f"[API 서버 상태 확인 실패] {e}")
-    return 'stopped'
-
-
-def start_check(request):
-    """점검 시작 API"""
-    if request.method == 'POST':
-        try:
-            print("="*60)
-            print("📝 점검 시작 요청 받음")
-            print("="*60)
-            
-            # /api 경로 추가!
-            response = requests.post(
-                f'{API_SERVER_URL}/api/start_check',  # ← 이렇게!
-                timeout=10,
-                headers={'Content-Type': 'application/json'}
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                print(f"✅ 점검 시작 성공: {result}")
-                
-                return JsonResponse({
-                    'success': True,
-                    'message': '점검이 시작되었습니다.'
-                })
-            else:
-                print(f"❌ 점검 시작 실패: HTTP {response.status_code}")
-                return JsonResponse({
-                    'success': False,
-                    'message': f'점검 시작 실패: HTTP {response.status_code}'
-                }, status=500)
-        
-        except requests.exceptions.ConnectionError:
-            print("❌ Flask API 서버 연결 실패")
-            return JsonResponse({
-                'success': False,
-                'message': 'Flask API 서버에 연결할 수 없습니다. API 서버를 먼저 시작해주세요.'
-            }, status=500)
-        
-        except Exception as e:
-            print(f"❌ 오류: {str(e)}")
-            return JsonResponse({
-                'success': False,
-                'message': f'서버 오류: {str(e)}'
-            }, status=500)
-    
-    return JsonResponse({
-        'success': False,
-        'message': 'POST 요청만 허용됩니다.'
-    }, status=405)
 
 def rounds_list(request):
-    """회차 목록 페이지 (기존 index)"""
+    """회차 목록 페이지"""
     filter_date = request.GET.get('date', '')
     filter_round = request.GET.get('round', '')
     
@@ -250,34 +203,37 @@ def rounds_list(request):
     
     return render(request, 'dashboard/rounds_list.html', context)
 
+
 def round_detail(request, round_id):
-    """회차별 자산 목록"""
+    """특정 회차의 자산 목록"""
     check_round = get_object_or_404(CheckRound, id=round_id)
+    
+    # 이 회차의 보안 점검 결과들
     security_checks = SecurityCheck.objects.filter(round=check_round).select_related('asset')
     
-    assets_data = []
-    for check in security_checks:
-        asset = check.asset
-        assets_data.append({
-            'id': asset.id,
-            'asset_code': asset.asset_code,
-            'name': asset.name,
-            'hostname': asset.hostname,
-            'distro': asset.distro,
-            'os_version': asset.os_version,
-            'execution_type': asset.execution_type,
-            'check_date': check.check_date,
-            'passed': check.passed_checks,
-            'warnings': check.warning_checks,
-            'failed': check.failed_checks,
-            'na': check.not_applicable_checks,
-            'status': check.status,
-        })
+    # 자산 정보 구성
+    assets = []
+    for sec_check in security_checks:
+        asset_data = {
+            'id': sec_check.asset.id,
+            'asset_code': sec_check.asset.asset_code,
+            'name': sec_check.asset.name,
+            'hostname': sec_check.asset.hostname,
+            'distro': sec_check.asset.distro,
+            'os_version': sec_check.asset.os_version,
+            'execution_type': sec_check.asset.execution_type,
+            'check_date': sec_check.check_date,
+            'passed': sec_check.passed_checks,
+            'warnings': sec_check.warning_checks,
+            'failed': sec_check.failed_checks,
+            'na': sec_check.not_applicable_checks,
+        }
+        assets.append(asset_data)
     
     context = {
         'check_round': check_round,
-        'assets': assets_data,
-        'total_assets': len(assets_data),
+        'assets': assets,
+        'total_assets': len(assets),
     }
     
     return render(request, 'dashboard/list.html', context)
@@ -286,214 +242,210 @@ def round_detail(request, round_id):
 def asset_detail(request, asset_id):
     """자산 상세 페이지"""
     asset = get_object_or_404(Asset, id=asset_id)
-    latest_check = SecurityCheck.objects.filter(asset=asset).order_by('-check_date').first()
     
-    if not latest_check:
-        context = {
+    # 이 자산의 최근 보안 점검 결과
+    latest_security_check = SecurityCheck.objects.filter(asset=asset).order_by('-check_date').first()
+    
+    if not latest_security_check:
+        return render(request, 'dashboard/asset_detail.html', {
             'asset': asset,
-            'error_message': '점검 데이터가 없습니다.'
-        }
-        return render(request, 'dashboard/asset_detail.html', context)
+            'error': '점검 결과가 없습니다.'
+        })
     
-    check_details = latest_check.details if latest_check.details else []
+    check_round = latest_security_check.round
     
+    # 상태 필터
     status_filter = request.GET.get('status', '')
+    
+    # details JSON에서 점검 항목 추출
+    check_details_raw = latest_security_check.details if latest_security_check.details else []
+    
+    # 필터링
     if status_filter:
-        if status_filter == 'pass':
-            check_details = [c for c in check_details if c.get('status') in ['양호', 'pass']]
-        elif status_filter == 'fail':
-            check_details = [c for c in check_details if c.get('status') in ['취약', 'fail']]
-        elif status_filter == 'warn':
-            check_details = [c for c in check_details if c.get('status') in ['주의', 'warn']]
-        elif status_filter == 'not_applicable':
-            check_details = [c for c in check_details if c.get('status') in ['해당없음', 'not_applicable', '해당 없음']]
+        filtered_details = []
+        for check_item in check_details_raw:
+            item_status = check_item.get('status', '').lower()
+            if status_filter == 'pass' and item_status in ['pass', 'passed', '양호']:
+                filtered_details.append(check_item)
+            elif status_filter == 'fail' and item_status in ['fail', 'failed', '취약']:
+                filtered_details.append(check_item)
+            elif status_filter == 'warn' and item_status in ['warn', 'warning', '주의']:
+                filtered_details.append(check_item)
+            elif status_filter == 'not_applicable' and item_status in ['not_applicable', 'n/a', 'na', '해당없음']:
+                filtered_details.append(check_item)
+        check_details_raw = filtered_details
     
-    for check in check_details:
-        status = check.get('status', '')
-        if status in ['pass', 'PASS']:
-            check['status_normalized'] = 'pass'
-            check['status_display'] = '양호'
-        elif status in ['fail', 'FAIL', '취약']:
-            check['status_normalized'] = 'fail'
-            check['status_display'] = '취약'
-        elif status in ['warn', 'WARN', '주의']:
-            check['status_normalized'] = 'warn'
-            check['status_display'] = '주의'
-        else:
-            check['status_normalized'] = 'not_applicable'
-            check['status_display'] = '해당없음'
+    # 통계
+    total_checks = latest_security_check.total_checks
+    passed_checks = latest_security_check.passed_checks
+    failed_checks = latest_security_check.failed_checks
+    warning_checks = latest_security_check.warning_checks
+    not_applicable_checks = latest_security_check.not_applicable_checks
     
-    chart_labels = json.dumps(['양호', '주의', '취약', '해당없음'])
-    chart_data = json.dumps([
-        latest_check.passed_checks,
-        latest_check.warning_checks,
-        latest_check.failed_checks,
-        latest_check.not_applicable_checks
-    ])
+    pass_rate = latest_security_check.get_pass_rate()
+    
+    # 차트 데이터
+    chart_labels = ['양호', '주의', '취약', '해당없음']
+    chart_data = [passed_checks, warning_checks, failed_checks, not_applicable_checks]
+    
+    # 점검 항목 상세 정보 구성
+    check_details = []
+    for idx, check_item in enumerate(check_details_raw):
+        status = check_item.get('status', 'unknown').lower()
+        
+        status_normalized = 'pass'
+        status_display = '양호'
+        
+        if status in ['fail', 'failed', '취약']:
+            status_normalized = 'fail'
+            status_display = '취약'
+        elif status in ['warn', 'warning', '주의']:
+            status_normalized = 'warn'
+            status_display = '주의'
+        elif status in ['not_applicable', 'n/a', 'na', '해당없음']:
+            status_normalized = 'not_applicable'
+            status_display = '해당없음'
+        
+        check_details.append({
+            'id': check_item.get('check_id', f'U-{idx+1:02d}'),
+            'name': check_item.get('name', check_item.get('check_name', '점검 항목')),
+            'status': check_item.get('status', 'unknown'),
+            'status_normalized': status_normalized,
+            'status_display': status_display,
+            'details': check_item.get('details', ''),
+            'checked_paths': check_item.get('checked_paths', ''),
+            'commands_executed': check_item.get('commands_executed', ''),
+            'recommendation': check_item.get('recommendation', ''),
+        })
     
     context = {
         'asset': asset,
-        'latest_check': latest_check,
-        'check_round': latest_check.round,
+        'check_round': check_round,
+        'latest_check': latest_security_check,
+        'total_checks': total_checks,
+        'passed_checks': passed_checks,
+        'failed_checks': failed_checks,
+        'warning_checks': warning_checks,
+        'not_applicable_checks': not_applicable_checks,
+        'pass_rate': pass_rate,
+        'chart_labels': json.dumps(chart_labels),
+        'chart_data': json.dumps(chart_data),
         'check_details': check_details,
-        'total_checks': latest_check.total_checks,
-        'passed_checks': latest_check.passed_checks,
-        'warning_checks': latest_check.warning_checks,
-        'failed_checks': latest_check.failed_checks,
-        'not_applicable_checks': latest_check.not_applicable_checks,
-        'pass_rate': latest_check.get_pass_rate(),
-        'chart_labels': chart_labels,
-        'chart_data': chart_data,
         'status_filter': status_filter,
     }
     
     return render(request, 'dashboard/asset_detail.html', context)
 
 
+@csrf_exempt
+def start_check(request):
+    """보안 점검 시작 API (CSRF 제외)"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'POST 요청만 허용됩니다.'}, status=405)
+    
+    try:
+        # API 서버에 점검 시작 요청
+        api_url = f"{settings.API_SERVER_URL}/start_check"
+        response = requests.post(api_url, timeout=10)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return JsonResponse({
+                'success': True,
+                'message': '보안 점검이 시작되었습니다.',
+                'data': data
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': f'API 서버 오류: {response.status_code}'
+            }, status=500)
+            
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'API 서버 연결 실패: {str(e)}'
+        }, status=500)
+
+
 def export_asset_excel(request, asset_id):
-    """자산 점검 결과 Excel 다운로드"""
+    """자산 상세 정보 엑셀 다운로드"""
     asset = get_object_or_404(Asset, id=asset_id)
-    latest_check = SecurityCheck.objects.filter(asset=asset).order_by('-check_date').first()
     
-    if not latest_check:
-        return HttpResponse("점검 데이터가 없습니다.", status=404)
+    # 이 자산의 최근 보안 점검 결과
+    latest_security_check = SecurityCheck.objects.filter(asset=asset).order_by('-check_date').first()
     
-    wb = Workbook()
+    if not latest_security_check:
+        return HttpResponse("점검 결과가 없습니다.", status=404)
+    
+    check_details = latest_security_check.details if latest_security_check.details else []
+    
+    # 엑셀 파일 생성
+    wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "점검 결과"
+    ws.title = f"{asset.asset_code}"
     
-    header_fill = PatternFill(start_color="4472C4", end_color="4472C4", fill_type="solid")
-    header_font = Font(color="FFFFFF", bold=True, size=12)
+    # 헤더 스타일
+    header_fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+    header_font = Font(color="FFFFFF", bold=True)
     
-    pass_fill = PatternFill(start_color="C6EFCE", end_color="C6EFCE", fill_type="solid")
-    fail_fill = PatternFill(start_color="FFC7CE", end_color="FFC7CE", fill_type="solid")
-    warn_fill = PatternFill(start_color="FFEB9C", end_color="FFEB9C", fill_type="solid")
-    na_fill = PatternFill(start_color="E7E6E6", end_color="E7E6E6", fill_type="solid")
+    # 자산 정보 헤더
+    ws['A1'] = '자산 정보'
+    ws['A1'].font = Font(bold=True, size=14)
+    ws.merge_cells('A1:B1')
     
-    border = Border(
-        left=Side(style='thin'),
-        right=Side(style='thin'),
-        top=Side(style='thin'),
-        bottom=Side(style='thin')
-    )
+    # 자산 정보
+    ws['A2'] = '자산 코드'
+    ws['B2'] = asset.asset_code
+    ws['A3'] = '호스트'
+    ws['B3'] = asset.hostname or 'N/A'
+    ws['A4'] = '배포판'
+    ws['B4'] = asset.distro or 'Unknown'
+    ws['A5'] = 'OS 버전'
+    ws['B5'] = asset.os_version or 'Unknown'
+    ws['A6'] = '커널'
+    ws['B6'] = asset.kernel or 'N/A'
+    ws['A7'] = '점검 일시'
+    ws['B7'] = latest_security_check.check_date.strftime('%Y-%m-%d %H:%M:%S')
     
-    ws.merge_cells('A1:H1')
-    title_cell = ws['A1']
-    title_cell.value = f"보안 점검 결과 리포트 - {asset.name}"
-    title_cell.font = Font(size=16, bold=True)
-    title_cell.alignment = Alignment(horizontal='center', vertical='center')
+    # 점검 항목 헤더
+    ws['A9'] = '점검 항목'
+    ws['A9'].font = Font(bold=True, size=14)
+    ws.merge_cells('A9:F9')
     
-    ws['A3'] = "자산 정보"
-    ws['A3'].font = Font(bold=True, size=14)
-    
-    info_data = [
-        ["자산 코드", asset.asset_code],
-        ["자산명", asset.name],
-        ["호스트", asset.hostname or "N/A"],
-        ["배포판", asset.distro or "Unknown"],
-        ["OS 버전", asset.os_version or "Unknown"],
-        ["커널 버전", asset.kernel or "N/A"],
-        ["실행 방식", asset.execution_type or "N/A"],
-        ["점검 일시", latest_check.check_date.strftime("%Y-%m-%d %H:%M:%S")],
-    ]
-    
-    row = 4
-    for label, value in info_data:
-        ws[f'A{row}'] = label
-        ws[f'A{row}'].font = Font(bold=True)
-        ws[f'B{row}'] = value
-        row += 1
-    
-    row += 1
-    ws[f'A{row}'] = "점검 통계"
-    ws[f'A{row}'].font = Font(bold=True, size=14)
-    
-    row += 1
-    stats_data = [
-        ["총 점검 수", latest_check.total_checks],
-        ["양호", latest_check.passed_checks],
-        ["주의", latest_check.warning_checks],
-        ["취약", latest_check.failed_checks],
-        ["해당없음", latest_check.not_applicable_checks],
-        ["합격률", f"{latest_check.get_pass_rate()}%"],
-    ]
-    
-    for label, value in stats_data:
-        ws[f'A{row}'] = label
-        ws[f'A{row}'].font = Font(bold=True)
-        ws[f'B{row}'] = value
-        row += 1
-    
-    row += 2
-    ws[f'A{row}'] = "상세 점검 결과"
-    ws[f'A{row}'].font = Font(bold=True, size=14)
-    
-    row += 1
-    headers = ["번호", "점검ID", "점검명", "상태", "점검내용", "점검경로", "실행명령어", "권장사항"]
-    
-    for col, header in enumerate(headers, 1):
-        cell = ws.cell(row=row, column=col)
+    # 테이블 헤더
+    headers = ['점검 ID', '점검명', '상태', '점검 내용', '조치사항', '점검 경로']
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=10, column=col_num)
         cell.value = header
         cell.fill = header_fill
         cell.font = header_font
-        cell.alignment = Alignment(horizontal='center', vertical='center')
-        cell.border = border
+        cell.alignment = Alignment(horizontal='center')
     
-    ws.column_dimensions['A'].width = 8
-    ws.column_dimensions['B'].width = 12
-    ws.column_dimensions['C'].width = 30
-    ws.column_dimensions['D'].width = 12
-    ws.column_dimensions['E'].width = 40
-    ws.column_dimensions['F'].width = 30
-    ws.column_dimensions['G'].width = 30
-    ws.column_dimensions['H'].width = 40
+    # 점검 데이터
+    row = 11
+    for idx, check_item in enumerate(check_details):
+        ws.cell(row=row, column=1, value=check_item.get('check_id', f'U-{idx+1:02d}'))
+        ws.cell(row=row, column=2, value=check_item.get('name', check_item.get('check_name', '')))
+        ws.cell(row=row, column=3, value=check_item.get('status', ''))
+        ws.cell(row=row, column=4, value=check_item.get('details', ''))
+        ws.cell(row=row, column=5, value=check_item.get('recommendation', ''))
+        ws.cell(row=row, column=6, value=check_item.get('checked_paths', ''))
+        row += 1
     
-    if latest_check.details:
-        for idx, check in enumerate(latest_check.details, 1):
-            row += 1
-            
-            status = check.get('status', '')
-            
-            if status in ['양호', 'pass']:
-                status_kr = '양호'
-                fill = pass_fill
-            elif status in ['취약', 'fail']:
-                status_kr = '취약'
-                fill = fail_fill
-            elif status in ['주의', 'warn']:
-                status_kr = '주의'
-                fill = warn_fill
-            else:
-                status_kr = '해당없음'
-                fill = na_fill
-            
-            data_row = [
-                idx,
-                check.get('id', ''),
-                check.get('name', ''),
-                status_kr,
-                check.get('details', ''),
-                check.get('checked_paths', ''),
-                check.get('commands_executed', ''),
-                check.get('recommendation', '')
-            ]
-            
-            for col, value in enumerate(data_row, 1):
-                cell = ws.cell(row=row, column=col)
-                cell.value = value
-                cell.border = border
-                cell.alignment = Alignment(vertical='top', wrap_text=True)
-                
-                if col == 4:
-                    cell.fill = fill
-                    cell.alignment = Alignment(horizontal='center', vertical='center')
+    # 열 너비 조정
+    ws.column_dimensions['A'].width = 15
+    ws.column_dimensions['B'].width = 40
+    ws.column_dimensions['C'].width = 12
+    ws.column_dimensions['D'].width = 50
+    ws.column_dimensions['E'].width = 50
+    ws.column_dimensions['F'].width = 40
     
+    # HTTP 응답 생성
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    
-    filename = f"security_check_{asset.asset_code}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response['Content-Disposition'] = f'attachment; filename={asset.asset_code}_check_result.xlsx'
     
     wb.save(response)
     return response

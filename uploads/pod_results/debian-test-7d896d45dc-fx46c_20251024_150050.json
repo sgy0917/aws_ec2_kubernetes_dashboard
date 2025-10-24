@@ -1,9 +1,9 @@
 {
   "report_info": {
-    "generated_at": "2025-10-21 15:56:34",
-    "hostname": "ubuntu-readonly-2",
-    "distro": "ubuntu",
-    "version": "22.04",
+    "generated_at": "2025-10-24 15:00:46",
+    "hostname": "debian-test-7d896d45dc-fx46c",
+    "distro": "debian",
+    "version": "13",
     "kernel": "6.14.0-33-generic",
     "execution_mode": "host",
     "is_container": false,
@@ -11,8 +11,8 @@
   },
   "summary": {
     "total_checks": 36,
-    "pass": 17,
-    "fail": 5,
+    "pass": 18,
+    "fail": 4,
     "warn": 3,
     "not_applicable": 11
   },
@@ -26,9 +26,9 @@
       "checked_paths": "/etc/ssh/sshd_config ",
       "commands_executed": "grep -i PermitRootLogin /etc/ssh/sshd_config ",
       "command_results": "N/A (Kubernetes Pod environment) ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -40,9 +40,9 @@
       "checked_paths": "/etc/security/pwquality.conf ",
       "commands_executed": "grep minlen /etc/security/pwquality.conf ",
       "command_results": "N/A (Kubernetes Pod environment) ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -54,9 +54,9 @@
       "checked_paths": "/etc/security/faillock.conf ",
       "commands_executed": "grep deny /etc/security/faillock.conf ",
       "command_results": "N/A (Kubernetes Pod environment) ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -68,9 +68,9 @@
       "checked_paths": "/etc/login.defs ",
       "commands_executed": "grep PASS_MAX_DAYS /etc/login.defs ",
       "command_results": "N/A (Kubernetes Pod environment) ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -82,9 +82,9 @@
       "checked_paths": "/etc/passwd, /etc/shadow ",
       "commands_executed": "stat -c '%a %U' /etc/passwd /etc/shadow; awk -F: '$2 != \"x\"' /etc/passwd ",
       "command_results": "Checked /etc/passwd for non-shadow passwords. /etc/shadow: owner=root, perms=640 ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -96,9 +96,9 @@
       "checked_paths": "$PATH, /root ",
       "commands_executed": "echo $PATH; stat -c '%a' /root; find $PATH -type d -perm -0002 ",
       "command_results": "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin; No current directory in PATH; root home perms: 000 ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -110,9 +110,9 @@
       "checked_paths": "/, /etc, /bin, /sbin, /usr ",
       "commands_executed": "find / -xdev -nouser -o -nogroup 2>/dev/null | head -20 ",
       "command_results": "Found 0 0 files with no user owner; Found 0 0 files with no group owner ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -124,9 +124,9 @@
       "checked_paths": "/etc/passwd ",
       "commands_executed": "stat -c '%a %U' /etc/passwd; awk -F: '$3 = 0 && $1 != \"root\"' /etc/passwd ",
       "command_results": "owner=root, perms=644 ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -138,9 +138,9 @@
       "checked_paths": "/etc/shadow ",
       "commands_executed": "stat -c '%a %U' /etc/shadow; awk -F: '$2 = \"\"' /etc/shadow ",
       "command_results": "owner=root, perms=640 ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -152,9 +152,9 @@
       "checked_paths": "/etc/hosts ",
       "commands_executed": "stat -c '%a %U' /etc/hosts ",
       "command_results": "owner=root, perms=644 ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -166,9 +166,9 @@
       "checked_paths": "/etc/inetd.conf, /etc/xinetd.conf, /etc/xinetd.d ",
       "commands_executed": "stat -c '%a %U' /etc/inetd.conf /etc/xinetd.conf; find /etc/xinetd.d -type f ",
       "command_results": "No inetd files found ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -180,9 +180,9 @@
       "checked_paths": "/etc/syslog.conf, /etc/rsyslog.conf, /etc/rsyslog.d ",
       "commands_executed": "stat -c '%a %U' /etc/rsyslog.conf; find /etc/rsyslog.d -type f ",
       "command_results": "No syslog files found ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -194,9 +194,9 @@
       "checked_paths": "/etc/services ",
       "commands_executed": "stat -c '%a %U' /etc/services ",
       "command_results": "File not found ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -208,9 +208,9 @@
       "checked_paths": "/usr, /bin, /sbin, /tmp, /home ",
       "commands_executed": "find /usr /bin /sbin -name nc -o -name netcat -perm -4000; find /tmp /home -perm -4000 -o -perm -2000; find / -type d -perm -0002 ! -perm -1000 ",
       "command_results": "Dangerous SUID programs found: none ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -222,9 +222,9 @@
       "checked_paths": "/etc/profile, /etc/bashrc, /etc/profile.d, ~/.bashrc ",
       "commands_executed": "stat -c '%a %U' /etc/profile /etc/bashrc; find /etc/profile.d -type f ! -user root ",
       "command_results": "/etc/profile: owner=root, perms=644; /etc/bash.bashrc: owner=root, perms=644; /etc/environment: owner=root, perms=644;  ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -236,9 +236,9 @@
       "checked_paths": "/, /etc, /bin, /sbin, /usr, /var ",
       "commands_executed": "find / -xdev -type f -perm -0002 ! -path '/proc/*' ! -path '/sys/*' ! -path '/dev/*' ",
       "command_results": "Found 0 0 world writable files ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -250,9 +250,9 @@
       "checked_paths": "/etc/hosts.equiv, ~/.rhosts ",
       "commands_executed": "find /etc /home -name .rhosts -o -name hosts.equiv; ps aux | grep -E 'rlogind|rshd|rexecd' ",
       "command_results": "No .rhosts or hosts.equiv files found; No r-services running ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -264,23 +264,23 @@
       "checked_paths": "/etc/hosts.allow, /etc/hosts.deny, iptables, firewalld ",
       "commands_executed": "iptables -L -n; firewall-cmd --state; ufw status ",
       "command_results": "; No firewall or TCP Wrappers found ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
       "id": "U-19",
       "name": "cron 파일 권한 ",
       "status": "취약",
-      "details": "[취약 파일/디렉터리: /etc/cron.daily(소유자:unknown, 권한:000), /etc/cron.d(소유자:unknown, 권한:000)] cron 관련 파일의 소유자 또는 권한이 부적절합니다. ",
+      "details": "[취약 파일/디렉터리: /etc/cron.daily(소유자:unknown, 권한:000)] cron 관련 파일의 소유자 또는 권한이 부적절합니다. ",
       "recommendation": "chown root:root <파일명> && chmod 적절한권한 <파일명> ",
       "checked_paths": "/usr/bin/crontab, /etc/cron.*, /var/spool/cron ",
       "commands_executed": "stat -c '%a %U' /usr/bin/crontab /etc/cron.d /var/spool/cron ",
-      "command_results": "; /etc/cron.daily: owner=unknown, perms=000; /etc/cron.d: owner=unknown, perms=000 ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "command_results": "; /etc/cron.daily: owner=unknown, perms=000 ",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -292,9 +292,9 @@
       "checked_paths": "/usr/sbin/fingerd, systemctl, xinetd ",
       "commands_executed": "ps aux | grep -E 'fingerd|in.fingerd'; systemctl status finger ",
       "command_results": "fingerd is not running ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -306,9 +306,9 @@
       "checked_paths": "systemctl, ps ",
       "commands_executed": "ps aux | grep -E 'vsftpd ftpd proftpd'; systemctl status ",
       "command_results": "No Anonymous FTP services running ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -320,23 +320,23 @@
       "checked_paths": "systemctl, ps ",
       "commands_executed": "ps aux | grep -E 'rlogind rshd rexecd'; systemctl status ",
       "command_results": "No r계열(rlogin, rsh, rexec) services running ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
       "id": "U-23",
       "name": "DoS 취약 서비스 비활성화 ",
-      "status": "취약",
-      "details": "[실행 중인 서비스: echo] DoS 취약(echo, chargen, daytime) 서비스가 실행 중입니다. ",
-      "recommendation": "서비스 중지 및 비활성화: systemctl stop <서비스명> && systemctl disable <서비스명> ",
+      "status": "양호",
+      "details": "DoS 취약(echo, chargen, daytime) 서비스가 비활성화되어 있습니다. ",
+      "recommendation": " ",
       "checked_paths": "systemctl, ps ",
       "commands_executed": "ps aux | grep -E 'echo chargen daytime'; systemctl status ",
-      "command_results": "Running services: echo ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "command_results": "No DoS 취약(echo, chargen, daytime) services running ",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -348,9 +348,9 @@
       "checked_paths": "systemctl, ps ",
       "commands_executed": "ps aux | grep -E 'nfs-server nfsd rpc.nfsd'; systemctl status ",
       "command_results": "No NFS services running ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -362,9 +362,9 @@
       "checked_paths": "/etc/exports ",
       "commands_executed": "grep -E '^\\s*/.*\\s+\\*' /etc/exports; grep -E 'rw' /etc/exports ",
       "command_results": "File not found ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -376,9 +376,9 @@
       "checked_paths": "systemctl, ps ",
       "commands_executed": "ps aux | grep -E 'autofs automount'; systemctl status ",
       "command_results": "No automountd services running ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -390,9 +390,9 @@
       "checked_paths": "systemctl, ps ",
       "commands_executed": "ps aux | grep -E 'rpcbind portmap'; systemctl status ",
       "command_results": "No RPC services running ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -404,9 +404,9 @@
       "checked_paths": "systemctl, ps ",
       "commands_executed": "ps aux | grep -E 'ypserv ypbind ypxfrd rpc.yppasswdd rpc.ypupdated'; systemctl status ",
       "command_results": "No NIS/NIS+ services running ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -418,9 +418,9 @@
       "checked_paths": "systemctl, ps ",
       "commands_executed": "ps aux | grep -E 'tftpd in.tftpd talkd in.talkd ntalkd'; systemctl status ",
       "command_results": "No TFTP/Talk services running ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -432,9 +432,9 @@
       "checked_paths": "/usr/sbin/sendmail ",
       "commands_executed": "sendmail -d0.1 -bt < /dev/null ",
       "command_results": "sendmail not found ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -446,9 +446,9 @@
       "checked_paths": "/etc/mail/sendmail.cf ",
       "commands_executed": "grep -E 'R$\\*.*Relaying' /etc/mail/sendmail.cf; ps aux | grep sendmail ",
       "command_results": "sendmail not running ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -460,9 +460,9 @@
       "checked_paths": "/etc/mail/sendmail.cf ",
       "commands_executed": "grep 'O PrivacyOptions' /etc/mail/sendmail.cf ",
       "command_results": "sendmail not found ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -474,9 +474,9 @@
       "checked_paths": "/usr/sbin/named ",
       "commands_executed": "named -v; ps aux | grep named ",
       "command_results": "named not running ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -488,9 +488,9 @@
       "checked_paths": "/etc/named.conf, /etc/bind/named.conf ",
       "commands_executed": "grep -E 'allow-transfer' /etc/named.conf /etc/bind/named.conf ",
       "command_results": "named not running ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -502,9 +502,9 @@
       "checked_paths": "apt, yum, dnf ",
       "commands_executed": "apt list --upgradable; yum check-update ",
       "command_results": "apt: 0 0 updates available ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     },
     {
@@ -516,9 +516,9 @@
       "checked_paths": "/var/log/syslog, /var/log/messages, /var/log/auth.log, /etc/logrotate.conf ",
       "commands_executed": "stat -c '%a' /var/log/syslog /var/log/messages; ls /etc/logrotate.d ",
       "command_results": "Found logs: none ",
-      "check_timestamp": "2025-10-21 15:56:34",
-      "hostname": "ubuntu-readonly-2",
-      "distro": "ubuntu 22.04",
+      "check_timestamp": "2025-10-24 15:00:46",
+      "hostname": "debian-test-7d896d45dc-fx46c",
+      "distro": "debian 13",
       "execution_mode": "host"
     }
   ]

@@ -4,7 +4,6 @@
 
 {% block extra_css %}
 <style>
-    /* 컨텐츠 영역 제한 */
     body {
         background: #f5f5f5;
     }
@@ -22,7 +21,6 @@
         gap: 25px;
     }
 
-    /* 상단 통계 카드 */
     .stats-cards {
         display: grid;
         grid-template-columns: repeat(5, 1fr);
@@ -58,29 +56,27 @@
     }
 
     .stat-card-label {
-        font-size: 14px;
+        font-size: 13px;
         color: #6c757d;
         margin-bottom: 8px;
     }
 
     .stat-card-value {
-        font-size: 33px;
+        font-size: 32px;
         font-weight: 700;
         color: #212529;
     }
 
     .stat-card-detail {
-        font-size: 13px;
+        font-size: 12px;
         color: #6c757d;
         margin-top: 8px;
     }
 
-    /* 총 누적 비용 카드 강조 */
     .stat-card.total-cost .stat-card-value {
         color: #FF9800;
     }
 
-    /* 점검 시작 버튼 */
     .check-action {
         background: white;
         border-radius: 8px;
@@ -92,14 +88,14 @@
     }
 
     .check-action-info h3 {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 600;
         color: #212529;
         margin-bottom: 8px;
     }
 
     .check-action-info p {
-        font-size: 15px;
+        font-size: 13px;
         color: #6c757d;
     }
 
@@ -111,7 +107,7 @@
         display: inline-block;
         padding: 4px 12px;
         border-radius: 12px;
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 600;
     }
 
@@ -131,7 +127,7 @@
         color: white;
         border: none;
         border-radius: 6px;
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 600;
         cursor: pointer;
         transition: background 0.3s;
@@ -149,7 +145,6 @@
         cursor: not-allowed;
     }
 
-    /* 그래프 영역 */
     .charts-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -164,7 +159,7 @@
     }
 
     .chart-card h3 {
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 600;
         color: #212529;
         margin-bottom: 20px;
@@ -177,13 +172,12 @@
         height: 300px;
     }
 
-    /* 비용 설명 */
     .cost-info {
         background: #f8f9fa;
         border-radius: 6px;
         padding: 15px;
         margin-top: 15px;
-        font-size: 14px;
+        font-size: 12px;
         color: #495057;
     }
 
@@ -191,7 +185,6 @@
         color: #212529;
     }
 
-    /* 최신 통계 */
     .latest-stats {
         background: white;
         border-radius: 8px;
@@ -200,7 +193,7 @@
     }
 
     .latest-stats h3 {
-        font-size: 18px;
+        font-size: 16px;
         font-weight: 600;
         color: #212529;
         margin-bottom: 20px;
@@ -220,7 +213,7 @@
     }
 
     .stat-item-value {
-        font-size: 28px;
+        font-size: 24px;
         font-weight: 700;
         margin-bottom: 4px;
     }
@@ -231,7 +224,7 @@
     .stat-item-value.gray { color: #6c757d; }
 
     .stat-item-label {
-        font-size: 16px;
+        font-size: 12px;
         color: #6c757d;
     }
 </style>
@@ -243,9 +236,15 @@
         <!-- 상단 통계 카드 -->
         <div class="stats-cards">
             <div class="stat-card assets">
-                <div class="stat-card-label">총 자산</div>
-                <div class="stat-card-value">{{ total_assets }}</div>
-                <div class="stat-card-detail">관리 중인 자산</div>
+                <div class="stat-card-label">최근 점검 자산</div>
+                <div class="stat-card-value">{{ latest_round_assets }}</div>
+                <div class="stat-card-detail">
+                    {% if latest_round %}
+                    {{ latest_round.check_date }} {{ latest_round.round_number }}회차
+                    {% else %}
+                    데이터 없음
+                    {% endif %}
+                </div>
             </div>
             
             <div class="stat-card rounds">
@@ -289,7 +288,7 @@
         <div class="check-action">
             <div class="check-action-info">
                 <h3>🔍 보안 점검 시작</h3>
-                <p>모든 자산에 대한 보안 점검을 시작합니다. (점검 1회당 ${{ check_cost_per_run }})</p>
+                <p>모든 파드에 대한 보안 점검을 시작합니다. (점검 1회당 ${{ check_cost_per_run }})</p>
                 <div class="api-status">
                     {% if api_server_status == 'running' %}
                     <span class="status-badge running">● API 서버 실행 중</span>
@@ -306,7 +305,6 @@
 
         <!-- 그래프 영역 -->
         <div class="charts-grid">
-            <!-- 회차별 점검 통계 -->
             <div class="chart-card">
                 <h3>📊 회차별 점검 통계 (최근 7일)</h3>
                 <div class="chart-container">
@@ -314,7 +312,6 @@
                 </div>
             </div>
 
-            <!-- 자산별 비용 -->
             <div class="chart-card">
                 <h3>💰 자산별 월간 인프라 비용</h3>
                 <div class="chart-container">
@@ -370,7 +367,6 @@
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 <script>
-    // CSRF 토큰 가져오기
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -388,7 +384,6 @@
 
     const csrftoken = getCookie('csrftoken');
 
-    // 점검 시작 함수
     async function startSecurityCheck() {
         const button = document.querySelector('.btn-start-check');
         button.disabled = true;
@@ -409,8 +404,6 @@
             if (data.success) {
                 button.innerHTML = '<span>✓</span><span>점검 시작됨</span>';
                 alert('✅ ' + data.message + '\n\n점검이 완료되면 회차별 점검 현황에서 결과를 확인할 수 있습니다.\n💰 점검 비용 ${{ check_cost_per_run }}이 추가됩니다.');
-                
-                // 5초 후 페이지 새로고침
                 setTimeout(() => location.reload(), 5000);
             } else {
                 alert('❌ ' + data.message);
@@ -424,7 +417,6 @@
         }
     }
 
-    // 회차별 점검 통계 차트
     const checksCtx = document.getElementById('checksChart').getContext('2d');
     const checksChart = new Chart(checksCtx, {
         type: 'line',
@@ -470,7 +462,6 @@
         }
     });
 
-    // 자산별 비용 차트
     const costCtx = document.getElementById('costChart').getContext('2d');
     const costChart = new Chart(costCtx, {
         type: 'bar',
@@ -480,20 +471,9 @@
                 label: '월간 비용 ($)',
                 data: {{ cost_data|safe }},
                 backgroundColor: [
-                    '#7c4dff',
-                    '#2196F3',
-                    '#4CAF50',
-                    '#FF9800',
-                    '#f44336',
-                    '#9C27B0',
-                    '#00BCD4',
-                    '#CDDC39',
-                    '#FF5722',
-                    '#607D8B',
-                    '#E91E63',
-                    '#795548',
-                    '#3F51B5',
-                    '#009688'
+                    '#7c4dff', '#2196F3', '#4CAF50', '#FF9800', '#f44336',
+                    '#9C27B0', '#00BCD4', '#CDDC39', '#FF5722', '#607D8B',
+                    '#E91E63', '#795548', '#3F51B5', '#009688'
                 ]
             }]
         },
