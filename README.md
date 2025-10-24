@@ -4,5 +4,8 @@ AWS EC2 Django 구조 및 Nginx,Gunicorn 세팅추가
 새로 추가하는 기능들은 develop 브랜치에 추가 부탁
 
 complete_api_server.py -> ~/pod-checker-api 경로에 설치할 것
+sites-available/security_dashboard -> systemd nginx 설정 파일
+/etc/nginx/sites-enabled/mysite -> 해당 경로에 nginx 심볼릭 링크 경로 설정
+nginx.conf -> nginx setting 파일 
 
 
