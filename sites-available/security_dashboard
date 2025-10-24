@@ -1,0 +1,39 @@
+#/etc/nginx/sites-available
+upstream django_app {
+    server unix:/var/www/security_dashboard/mysite/gunicorn.sock fail_timeout=0;
+}
+
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    
+    server_name 3.34.164.191 localhost _;
+    
+    client_max_body_size 100M;
+    
+    access_log /var/log/nginx/security_dashboard_access.log;
+    error_log /var/log/nginx/security_dashboard_error.log;
+    
+    location /static/ {
+        alias /var/www/security_dashboard/mysite/staticfiles/;
+        expires 30d;
+    }
+    
+    location /media/ {
+        alias /var/www/security_dashboard/mysite/media/;
+    }
+    
+    location / {
+        proxy_pass http://django_app;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_redirect off;
+        
+        proxy_connect_timeout 120s;
+        proxy_send_timeout 120s;
+        proxy_read_timeout 120s;
+    }
+
+}
